@@ -57,8 +57,7 @@ internal class AppContainerDashboardEnvironment(
             when (target) {
                 AppTarget.LOCAL -> {
                     check(container.localDevice.readInfo().id == deviceId) { "El dispositivo local cambió." }
-                    container.shizukuLocalAccess.requireCommandPermission()
-                    container.localShell
+                    container.requireLocalPrivilegedShell()
                 }
 
                 AppTarget.REMOTE -> {
@@ -66,7 +65,15 @@ internal class AppContainerDashboardEnvironment(
                         ?: error("La sesión ADB ya no está disponible.")
                 }
             }
-        DevicePowerRepository(shell).execute(action)
+        try {
+            DevicePowerRepository(shell).execute(action)
+        } finally {
+            if (target == AppTarget.LOCAL && action != DevicePowerAction.RESTART_SYSTEM_UI) {
+                // Un reinicio o apagado deja la sesión local muerta: se limpia para no
+                // mostrar "Conectado" con un socket que ya no existe.
+                container.localAdb.disconnect()
+            }
+        }
         if (target == AppTarget.REMOTE) {
             container.disconnectDevice(deviceId)
             if (container.sessionStore.isEmpty()) container.stopSessionService() else container.refreshSessionNotification()

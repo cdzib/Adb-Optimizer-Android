@@ -33,6 +33,11 @@ por `127.0.0.1` y ejecutar comandos shell.
   - Energía muestra una guía en lugar de acciones sin permisos.
   - Apps oculta las acciones de escritura hasta tener privilegio.
   - ADB local oculta comandos y salida hasta estar conectado.
+- Las acciones privilegiadas (reiniciar, apagar, recovery, bootloader, reiniciar la
+  interfaz, congelar apps) usan **ADB local primero** y Shizuku como respaldo; ninguna
+  exige Shizuku instalado. Si la sesión ya estaba vinculada pero no conectada, se
+  reengancha sola antes de ejecutar. Termux no sirve para esto: `RUN_COMMAND` no
+  expone un shell con uid 2000.
 - Al conectar, Inicio muestra “ADB local · Conectado” en lugar de la fila de
   Shizuku.
 

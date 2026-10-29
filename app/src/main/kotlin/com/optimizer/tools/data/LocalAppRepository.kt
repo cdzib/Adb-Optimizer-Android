@@ -157,7 +157,7 @@ class LocalAppRepository(
                 }
             }
         }.getOrElse { error ->
-            AppActionResult(false, error.message ?: "No se pudo ejecutar la acción con Shizuku.")
+            AppActionResult(false, error.message ?: "No se pudo ejecutar la acción en el dispositivo.")
         }
 
     private fun open(packageName: String): AppActionResult {

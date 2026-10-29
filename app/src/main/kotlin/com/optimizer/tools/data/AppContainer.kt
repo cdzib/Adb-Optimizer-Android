@@ -162,8 +162,12 @@ class AppContainer(
             override suspend fun exec(
                 command: String,
                 timeoutMs: Long,
-            ): ShellResult =
-                if (localAdbShell.isConnected()) {
+            ): ShellResult {
+                if (!localAdbShell.isConnected() && localAdb.isAuthorized()) {
+                    // Si ya se vinculó antes, se reengancha sin que el usuario pase por la pantalla.
+                    runCatching { localAdb.connect() }
+                }
+                return if (localAdbShell.isConnected()) {
                     runCatching { localAdbShell.exec(command, timeoutMs) }
                         .getOrElse { error ->
                             if (shizukuLocalAccess.status() == ShizukuLocalStatus.READY) {
@@ -175,12 +179,33 @@ class AppContainer(
                 } else {
                     shizukuShell.exec(command, timeoutMs)
                 }
+            }
         }
     }
 
     val localShell: AdbShell get() = localShellRouter
 
     fun localPrivilegeReady(): Boolean = shizukuLocalAccess.status() == ShizukuLocalStatus.READY || localAdb.isConnected()
+
+    /**
+     * Shell para acciones privilegiadas del propio equipo (reiniciar, apagar, congelar…):
+     * ADB local si está conectado (o si ya se vinculó y se puede reconectar); si no,
+     * Shizuku. Termux no aplica porque `RUN_COMMAND` no expone un shell con uid 2000.
+     */
+    suspend fun requireLocalPrivilegedShell(): AdbShell {
+        if (localAdb.isConnected()) return localAdbShell
+        if (localAdb.isAuthorized()) {
+            runCatching { localAdb.connect() }
+            if (localAdb.isConnected()) return localAdbShell
+        }
+        if (shizukuLocalAccess.status() == ShizukuLocalStatus.READY) {
+            shizukuLocalAccess.requireCommandPermission()
+            return shizukuShell
+        }
+        throw IllegalStateException(
+            "Conecta ADB local o inicia Shizuku para ejecutar acciones del sistema.",
+        )
+    }
 
     val localApps: LocalAppRepository by lazy {
         LocalAppRepository(context, ::localPrivilegeReady, localShell)
