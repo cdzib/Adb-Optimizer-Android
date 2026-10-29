@@ -1,0 +1,1 @@
+Manage Android over ADB and Shizuku: debloat, optimize, mirror.

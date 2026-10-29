@@ -1,0 +1,22 @@
+ADB Optimizer connects to Android devices over ADB (wireless pairing or a
+local connection) or through Shizuku, and gives you a single place to inspect,
+tune and clean them up.
+
+Features:
+* Device dashboard with CPU, RAM, storage and thermal state.
+* Optimization recipes from a catalog, applied step by step and recorded in a
+  change journal.
+* App management: inventory, bulk actions, debloat lists and protected
+  packages.
+* Screen mirroring through an embedded scrcpy server.
+* Termux integration to run shell commands and Linux recipes.
+* TV support: Leanback launcher entry and remote-friendly UI.
+
+Requirements:
+* A device with wireless ADB debugging enabled, or Shizuku installed and
+  running. The Termux integration needs Termux.
+* No root access is required.
+
+Privacy: the app contains no ads, analytics or trackers. The debloat package
+list is downloaded from the Universal Android Debloater project only when you
+ask it to refresh; everything else stays on the device.

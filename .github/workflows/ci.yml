@@ -15,10 +15,6 @@ concurrency:
 jobs:
   android:
     runs-on: ubuntu-latest
-    env:
-      # Ruta del catalogo compartido cuando exista en el runner (hoy el repo de
-      # escritorio no esta publicado). Sin el, el APK no se empaqueta.
-      ADB_OPTIMIZER_SHARED: ${{ vars.ADB_OPTIMIZER_SHARED }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -28,25 +24,18 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Detectar catalogo compartido
-        id: catalog
-        run: |
-          if [ -n "$ADB_OPTIMIZER_SHARED" ] && [ -f "$ADB_OPTIMIZER_SHARED/recipes/recipes.json" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Sin catalogo compartido: los tests del catalogo se omiten y el APK no se empaqueta."
-          fi
-
       - run: ./gradlew ktlintCheck detekt --console=plain
       - run: ./gradlew :core:shell:test :core:optimization:test :app:testDebugUnitTest --console=plain
 
+      # El catalogo esta versionado en `app/catalog`, asi que el APK se empaqueta
+      # sin depender de carpetas externas.
       - name: Empaquetar APK
-        if: steps.catalog.outputs.present == 'true'
-        run: ./gradlew assembleDebug --console=plain
+        run: ./gradlew :app:assembleDebug --console=plain
+
+      - name: Verificar build de release
+        run: ./gradlew :app:assembleRelease --console=plain
 
       - uses: actions/upload-artifact@v4
-        if: steps.catalog.outputs.present == 'true'
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk

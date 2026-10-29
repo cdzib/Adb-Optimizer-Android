@@ -10,7 +10,9 @@ plugins {
 }
 
 /**
- * El catalogo y los fixtures de conformidad viven en el repo de escritorio (`shared/`), sin copias.
+ * El catalogo y los fixtures de conformidad viven en el repo de escritorio (`shared/`).
+ * La app versiona una copia del catalogo en `app/catalog` para poder empaquetar el APK
+ * sin carpetas externas; `-PsharedDir` sigue teniendo prioridad para desarrollo y tests.
  * Se usa la primera carpeta que tenga `recipes/recipes.json`: `-PsharedDir=...`,
  * `ADB_OPTIMIZER_SHARED`, `../shared` y `../AdbOptimizer-Desktop/shared`.
  */

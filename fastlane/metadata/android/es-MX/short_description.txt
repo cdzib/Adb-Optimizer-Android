@@ -1,0 +1,1 @@
+Gestiona Android por ADB y Shizuku: limpia, optimiza y espeja.

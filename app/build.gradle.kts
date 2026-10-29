@@ -15,6 +15,15 @@ val sharedCatalogDir: File? = rootProject.extra["sharedRootDir"] as File?
 
 val sharedCatalogPresent = sharedCatalogDir != null
 
+/**
+ * Copia versionada del catalogo para que un clon limpio (CI o F-Droid) pueda empaquetar el APK.
+ * `-PsharedDir` / `ADB_OPTIMIZER_SHARED` siguen teniendo prioridad durante el desarrollo.
+ */
+val vendoredCatalogDir = File(projectDir, "catalog")
+val vendoredCatalogPresent = File(vendoredCatalogDir, "recipes/recipes.json").isFile
+
+val catalogPresent = sharedCatalogPresent || vendoredCatalogPresent
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
@@ -74,8 +83,8 @@ android {
         aidl = true
     }
 
-    // Unica fuente de verdad del catalogo: shared/ del repo de escritorio, sin copias.
-    sourceSets["main"].assets.srcDir(sharedCatalogDir ?: rootProject.file("../shared"))
+    // El catalogo sale de `-PsharedDir` si existe; si no, de la copia versionada `app/catalog`.
+    sourceSets["main"].assets.srcDir(sharedCatalogDir ?: vendoredCatalogDir)
 
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
@@ -126,6 +135,33 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 }
 
+// `scrcpy-server` se compila desde fuente y se empaqueta como `assets/scrcpy/scrcpy-server.jar`.
+// Asi el APK se reproduce desde un clon limpio y no viaja ningun binario precompilado en el repo.
+val scrcpyAssetsDir = layout.buildDirectory.dir("generated/scrcpy-assets")
+
+val scrcpyServerApk =
+    project(":scrcpy-server")
+        .layout.buildDirectory
+        .file("outputs/apk/release/scrcpy-server-release-unsigned.apk")
+
+val prepareScrcpyServer =
+    tasks.register<Sync>("prepareScrcpyServer") {
+        group = "build"
+        description = "Compila scrcpy-server y lo deja en los assets generados."
+        dependsOn(":scrcpy-server:assembleRelease")
+        into(scrcpyAssetsDir)
+        from(scrcpyServerApk) {
+            into("scrcpy")
+            rename { "scrcpy-server.jar" }
+        }
+    }
+
+// Se registra como provider para que cualquier consumidor de assets (merge, lint) dependa del task.
+android.sourceSets["main"].assets.srcDir(prepareScrcpyServer)
+tasks
+    .matching { it.name.startsWith("lint") || it.name.contains("Lint") }
+    .configureEach { dependsOn(prepareScrcpyServer) }
+
 // Un APK sin catalogo no sirve: el empaquetado falla con un mensaje que dice como resolverlo.
 tasks
     .matching {
@@ -134,11 +170,13 @@ tasks
             !it.name.contains("UnitTest") &&
             !it.name.contains("AndroidTest")
     }.configureEach {
-        if (!sharedCatalogPresent) {
+        dependsOn(prepareScrcpyServer)
+        if (!catalogPresent) {
             doFirst {
                 throw GradleException(
-                    "No se encontro el catalogo compartido (recipes/recipes.json). " +
-                        "Ejecuta con -PsharedDir=/ruta/al/shared o define ADB_OPTIMIZER_SHARED.",
+                    "No se encontro el catalogo (recipes/recipes.json). " +
+                        "Restaura app/catalog/recipes o ejecuta con " +
+                        "-PsharedDir=/ruta/al/shared.",
                 )
             }
         }

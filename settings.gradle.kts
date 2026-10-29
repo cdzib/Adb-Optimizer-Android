@@ -18,6 +18,7 @@ dependencyResolutionManagement {
 rootProject.name = "AdbOptimizer"
 
 include(":app")
+include(":scrcpy-server")
 include(":core:model")
 include(":core:shell")
 include(":core:adb")

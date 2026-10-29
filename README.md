@@ -7,9 +7,10 @@ App Android de AdbOptimizer. Compose + ViewModels con un contrato MVI ligero y D
 - JDK 17 o superior (el CI usa 21)
 - Android SDK 36
 - Gradle Wrapper incluido (`./gradlew`)
-- Catálogo compartido (`recipes/recipes.json`). Se busca en `-PsharedDir`, en
-  `ADB_OPTIMIZER_SHARED`, en `../shared` y en `../AdbOptimizer-Desktop/shared`. Sin catálogo
-  los tests del catálogo se omiten y el empaquetado del APK falla.
+- Catalogo de recetas: la app versiona una copia en `app/catalog`, asi que un clon limpio
+  empaqueta el APK sin dependencias externas. Para desarrollo se puede apuntar al repo de
+  escritorio con `-PsharedDir` o `ADB_OPTIMIZER_SHARED` (tiene prioridad y tambien alimenta
+  los tests de conformidad).
 
 ## Comandos
 
@@ -36,11 +37,18 @@ app/
 ├── src/main/res/     # Recursos Android
 └── src/test/         # Tests JVM
 ```
+scrcpy-server/        # Servidor scrcpy compilado desde fuente (se empaqueta como asset)
+app/catalog/          # Copia versionada del catalogo de recetas e i18n
+fdroid/               # Metadata para publicar en F-Droid
+fastlane/             # Textos de la ficha en F-Droid
+```
 
 Cada feature es dueña de su pantalla, contenido, ViewModel y modelos. Las features no
 deben depender entre sí; la composición vive en `app/`.
 
 ## Documentación
+
+- [Publicación en F-Droid](fdroid/README.md)
 
 - [Arquitectura Android](docs/arquitectura-android.md)
 - [Spike de validación Fase 0](docs/fase-0-spike.md)

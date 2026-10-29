@@ -1,0 +1,27 @@
+Categories:
+  - System
+License: MIT
+AuthorName: Cesar Dzib
+SourceCode: https://github.com/cdzib/Adb-Optimizer
+IssueTracker: https://github.com/cdzib/Adb-Optimizer/issues
+RepoType: git
+Repo: https://github.com/cdzib/Adb-Optimizer
+
+Builds:
+  - versionName: 0.1.0
+    versionCode: 1
+    commit: REEMPLAZAR_CON_EL_HASH_COMPLETO_DEL_TAG_v0.1.0
+    gradle:
+      - yes
+    prebuild: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+MaintainerNotes: |-
+  El catalogo de recetas y las traducciones se versionan en `app/catalog`, y el
+  servidor de scrcpy se compila desde `scrcpy-server/` (fuente Apache-2.0), asi
+  que el build no necesita archivos ni repositorios externos.
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[\d.]+$
+ArchivePolicy: 3
+CurrentVersion: 0.1.0
+CurrentVersionCode: 1
