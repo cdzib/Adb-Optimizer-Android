@@ -63,6 +63,12 @@
             android:name=".feature.termux.data.TermuxResultService"
             android:exported="false" />
 
+        <!-- Pide el código de vinculación de la depuración inalámbrica en una notificación. -->
+        <service
+            android:name=".feature.localadb.data.LocalAdbPairingService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

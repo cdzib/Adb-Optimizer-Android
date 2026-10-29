@@ -59,4 +59,16 @@
     <string name="localadb_error_pairing_failed_title">No se pudo vincular</string>
     <string name="localadb_error_pairing_failed_body">Revisa que el código sea el que muestra el diálogo y que la depuración inalámbrica siga activa. Vuelve a intentarlo.</string>
     <string name="localadb_tools_description">Conecta por 127.0.0.1 y ejecuta comandos shell</string>
+    <string name="localadb_pairing_channel">Vinculación ADB</string>
+    <string name="localadb_pairing_notification_title">Vinculación ADB</string>
+    <string name="localadb_pairing_notification_searching">Buscando el puerto de vinculación. En Depuración inalámbrica toca «Vincular dispositivo con código».</string>
+    <string name="localadb_pairing_notification_ready">Puerto %1$d listo. Escribe aquí el código de 6 dígitos que muestra Android.</string>
+    <string name="localadb_pairing_notification_action">Escribir código</string>
+    <string name="localadb_pairing_notification_working">Vinculando…</string>
+    <string name="localadb_pairing_notification_failed">El código no funcionó. Inténtalo otra vez.</string>
+    <string name="localadb_pairing_notification_connect_failed">Vinculado, pero no se pudo abrir la sesión. Vuelve a la app.</string>
+    <string name="localadb_pairing_notification_connected">Vinculado. Sesión ADB local conectada.</string>
+    <string name="localadb_pairing_port_missing">No apareció el puerto de vinculación. Abre «Depuración inalámbrica» y toca «Vincular dispositivo con código».</string>
+    <string name="localadb_pairing_code_missing">Escribe el código de 6 dígitos.</string>
+    <string name="localadb_pairing_stop">Detener</string>
 </resources>

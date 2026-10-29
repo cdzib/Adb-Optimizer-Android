@@ -1,5 +1,6 @@
 package com.optimizer.tools.feature.localadb.presentation
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -135,7 +136,10 @@ fun LocalAdbScreen(
                 ErrorContent(
                     state = state,
                     onRetry = viewModel::retry,
-                    onStartPairing = viewModel::startPairing,
+                    onStartPairing = {
+                        openWirelessDebuggingSettings(context)
+                        viewModel.startPairing()
+                    },
                     onOpenSettings = { openDeveloperSettings(context) },
                 )
             }
@@ -771,6 +775,20 @@ private fun openDeveloperSettings(context: Context) {
     val primary = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
     val opened = runCatching { context.startActivity(primary) }.isSuccess
     if (!opened) openDeviceInfoSettings(context)
+}
+
+/**
+ * Abre la pantalla de «Depuración inalámbrica» directamente. El alias existe en AOSP y
+ * en One UI; si el fabricante lo renombra, cae a las opciones de desarrollador.
+ */
+private fun openWirelessDebuggingSettings(context: Context) {
+    val wireless =
+        Intent().setComponent(
+            ComponentName("com.android.settings", "com.android.settings.Settings\$WifiDebuggingActivity"),
+        )
+    val resolvable = runCatching { wireless.resolveActivity(context.packageManager) != null }.getOrDefault(false)
+    if (resolvable && runCatching { context.startActivity(wireless) }.isSuccess) return
+    openDeveloperSettings(context)
 }
 
 private fun openDeviceInfoSettings(context: Context) {

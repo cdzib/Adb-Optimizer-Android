@@ -22,6 +22,9 @@ interface LocalAdbEnvironment {
     /** Descubre por mDNS el puerto de vinculación (`adb-tls-pairing`). */
     suspend fun discoverPairingPort(): Int
 
+    /** Lanza la notificación que pide el código de 6 dígitos. */
+    fun startPairingNotification()
+
     /** Vincula con el código de 6 dígitos que muestra el sistema. */
     suspend fun pair(
         port: Int,

@@ -54,7 +54,23 @@ class LocalAdbViewModel(
             environment.logs.collect { lines -> _state.update { it.copy(log = lines) } }
         }
         viewModelScope.launch {
-            environment.endpoint.collect { endpoint -> _state.update { it.copy(endpoint = endpoint) } }
+            environment.endpoint.collect { endpoint ->
+                _state.update {
+                    if (endpoint != null) {
+                        it.copy(
+                            phase = LocalAdbPhase.CONNECTED,
+                            endpoint = endpoint,
+                            errorKind = null,
+                            detail = null,
+                            pairingPort = null,
+                            pairingCode = "",
+                            pairingBusy = false,
+                        )
+                    } else {
+                        it.copy(endpoint = null)
+                    }
+                }
+            }
         }
         // Si ya se aceptó el diálogo RSA, reconecta al abrir la app sin volver a preguntar.
         if (environment.isAuthorized() && environment.isAdbEnabled()) {
@@ -225,6 +241,11 @@ class LocalAdbViewModel(
                     errorKind = null,
                     detail = null,
                 )
+            }
+            try {
+                environment.startPairingNotification()
+            } catch (error: Exception) {
+                environment.log("no se pudo mostrar la notificación de vinculación: ${error.message}")
             }
             try {
                 val port = environment.discoverPairingPort()

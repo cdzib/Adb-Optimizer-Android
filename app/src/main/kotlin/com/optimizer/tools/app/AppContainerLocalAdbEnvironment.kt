@@ -35,6 +35,8 @@ internal class AppContainerLocalAdbEnvironment(
 
     override suspend fun discoverPairingPort(): Int = discoverPort()
 
+    override fun startPairingNotification() = container.startLocalAdbPairing()
+
     override suspend fun pair(
         port: Int,
         code: String,

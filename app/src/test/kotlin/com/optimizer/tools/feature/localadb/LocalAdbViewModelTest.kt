@@ -218,6 +218,7 @@ private class FakeLocalAdbEnvironment(
     var connectCalls = 0
     var disconnected = false
     var pairedWith: Pair<Int, String>? = null
+    var notifications = 0
     private val logsFlow = MutableStateFlow<List<String>>(emptyList())
     private val endpointFlow = MutableStateFlow<String?>(null)
 
@@ -236,6 +237,10 @@ private class FakeLocalAdbEnvironment(
     override fun isAuthorized(): Boolean = authorized
 
     override suspend fun discoverPairingPort(): Int = pairingPort
+
+    override fun startPairingNotification() {
+        notifications += 1
+    }
 
     override suspend fun pair(
         port: Int,

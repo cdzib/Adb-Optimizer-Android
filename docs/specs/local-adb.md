@@ -46,6 +46,12 @@ por `127.0.0.1` y ejecutar comandos shell.
   transporte que se usa para dispositivos remotos.
 - La vinculación solo hace falta una vez; la identidad RSA se guarda en
   `AdbKeys` y se reutiliza en las siguientes conexiones.
+- El botón **Vincular con código** abre la pantalla de *Depuración inalámbrica*
+  (alias `Settings$WifiDebuggingActivity`, con respaldo a Opciones de
+  desarrollador) y lanza una notificación con `RemoteInput` para escribir el
+  código sin volver a la app; `LocalAdbPairingService` vincula y conecta.
+- La app mantiene además el formulario de código en pantalla como respaldo si
+  las notificaciones están desactivadas.
 - El ADB clásico en `127.0.0.1:5555` sigue soportado como respaldo para equipos
   donde un PC ya ejecutó `adb tcpip 5555` o para Android antiguos.
 - La primera conexión clásica exige aceptar el diálogo RSA; se espera hasta 60 s.
