@@ -3,6 +3,7 @@ package com.optimizer.tools.app
 import com.optimizer.tools.data.AppContainer
 import com.optimizer.tools.domain.debloat.DebloatAction
 import com.optimizer.tools.domain.debloat.DebloatEntry
+import com.optimizer.tools.domain.debloat.DebloatRestoreItem
 import com.optimizer.tools.domain.debloat.DebloatRun
 import com.optimizer.tools.domain.profile.ProfileAppState
 import com.optimizer.tools.feature.debloat.DebloatEnvironment
@@ -29,6 +30,8 @@ internal class AppContainerDebloatEnvironment(
 
     override suspend fun states(): Map<String, ProfileAppState> = container.debloat.states()
 
+    override suspend fun restorable(): List<DebloatRestoreItem> = container.debloat.restorable()
+
     override suspend fun apply(
         action: DebloatAction,
         targets: List<String>,
@@ -36,4 +39,9 @@ internal class AppContainerDebloatEnvironment(
     ): DebloatRun = container.debloat.apply(action, targets, onProgress)
 
     override suspend fun undo(run: DebloatRun): Int = container.debloat.undo(run)
+
+    override suspend fun restore(
+        targets: List<String>,
+        onProgress: (Int, Int, String) -> Unit,
+    ): DebloatRun = container.debloat.restore(targets, onProgress)
 }

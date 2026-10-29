@@ -53,13 +53,14 @@ enum class DebloatAction {
     FREEZE,
     UNFREEZE,
     UNINSTALL,
+    RESTORE,
     ;
 
     val step: ProfileStepKind
         get() =
             when (this) {
                 FREEZE -> ProfileStepKind.DISABLE
-                UNFREEZE -> ProfileStepKind.ENABLE
+                UNFREEZE, RESTORE -> ProfileStepKind.ENABLE
                 UNINSTALL -> ProfileStepKind.UNINSTALL
             }
 
@@ -67,10 +68,17 @@ enum class DebloatAction {
         get() =
             when (this) {
                 FREEZE -> ProfileAppState.DISABLED
-                UNFREEZE -> ProfileAppState.ENABLED
+                UNFREEZE, RESTORE -> ProfileAppState.ENABLED
                 UNINSTALL -> ProfileAppState.UNINSTALLED
             }
 }
+
+/** Paquete que el debloater puede devolver a su estado original desde la pantalla. */
+data class DebloatRestoreItem(
+    val packageName: String,
+    val label: String,
+    val state: ProfileAppState,
+)
 
 /** Resultado de una tanda del debloater; conserva el estado anterior para deshacer. */
 data class DebloatRun(

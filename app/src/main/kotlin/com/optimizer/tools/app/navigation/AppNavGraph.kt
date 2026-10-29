@@ -481,6 +481,12 @@ internal fun AppNavGraph(
                 onCancelAction = debloatViewModel::cancelAction,
                 onConfirmAction = debloatViewModel::confirmAction,
                 onUndo = debloatViewModel::undo,
+                onOpenRestore = debloatViewModel::openRestore,
+                onToggleRestore = debloatViewModel::toggleRestore,
+                onSelectAllRestore = debloatViewModel::selectAllRestorable,
+                onClearRestore = debloatViewModel::clearRestoreSelection,
+                onConfirmRestore = debloatViewModel::confirmRestore,
+                onCloseRestore = debloatViewModel::closeRestore,
                 onDismissMessage = debloatViewModel::dismissMessage,
                 onDismissError = debloatViewModel::dismissError,
             )

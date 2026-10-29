@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SettingsBackupRestore
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,6 +76,7 @@ import com.optimizer.tools.core.ui.ToolEmptyState
 import com.optimizer.tools.core.ui.ToolTopBar
 import com.optimizer.tools.core.ui.resolve
 import com.optimizer.tools.domain.debloat.DebloatAction
+import com.optimizer.tools.domain.debloat.DebloatRestoreItem
 import com.optimizer.tools.domain.debloat.DebloatRisk
 import com.optimizer.tools.domain.debloat.DebloatRun
 import com.optimizer.tools.domain.debloat.DebloatSuggestion
@@ -94,23 +97,43 @@ internal fun DebloatScreen(
     onCancelAction: () -> Unit,
     onConfirmAction: () -> Unit,
     onUndo: () -> Unit,
+    onOpenRestore: () -> Unit,
+    onToggleRestore: (String) -> Unit,
+    onSelectAllRestore: () -> Unit,
+    onClearRestore: () -> Unit,
+    onConfirmRestore: () -> Unit,
+    onCloseRestore: () -> Unit,
     onDismissMessage: () -> Unit,
     onDismissError: () -> Unit,
 ) {
     if (LocalTelevisionUi.current) {
-        TvDebloatContent(
-            state = state,
-            onDownload = onDownload,
-            onToggle = onToggle,
-            onSelectAll = onSelectAll,
-            onClearSelection = onClearSelection,
-            onRequestAction = onRequestAction,
-            onCancelAction = onCancelAction,
-            onConfirmAction = onConfirmAction,
-            onUndo = onUndo,
-            onDismissMessage = onDismissMessage,
-            onDismissError = onDismissError,
-        )
+        Box {
+            TvDebloatContent(
+                state = state,
+                onDownload = onDownload,
+                onToggle = onToggle,
+                onSelectAll = onSelectAll,
+                onClearSelection = onClearSelection,
+                onRequestAction = onRequestAction,
+                onCancelAction = onCancelAction,
+                onConfirmAction = onConfirmAction,
+                onUndo = onUndo,
+                onOpenRestore = onOpenRestore,
+                onDismissMessage = onDismissMessage,
+                onDismissError = onDismissError,
+            )
+            if (state.restoreOpen) {
+                RestoreDialog(
+                    items = state.restorable,
+                    selected = state.restoreSelection,
+                    onToggle = onToggleRestore,
+                    onSelectAll = onSelectAllRestore,
+                    onClear = onClearRestore,
+                    onDismiss = onCloseRestore,
+                    onConfirm = onConfirmRestore,
+                )
+            }
+        }
         return
     }
     Column(Modifier.fillMaxSize()) {
@@ -119,6 +142,9 @@ internal fun DebloatScreen(
             subtitle = stringResource(R.string.debloat_subtitle_count, state.visible.size, state.selection.size),
             onBack = onBack,
             actions = {
+                IconButton(onClick = onOpenRestore, enabled = state.deviceAvailable && !state.running) {
+                    Icon(Icons.Filled.SettingsBackupRestore, contentDescription = stringResource(R.string.debloat_restore))
+                }
                 IconButton(onClick = onRefresh, enabled = state.deviceAvailable && !state.running) {
                     Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.debloat_refresh))
                 }
@@ -161,6 +187,17 @@ internal fun DebloatScreen(
                 onConfirm = onConfirmAction,
             )
         }
+        if (state.restoreOpen) {
+            RestoreDialog(
+                items = state.restorable,
+                selected = state.restoreSelection,
+                onToggle = onToggleRestore,
+                onSelectAll = onSelectAllRestore,
+                onClear = onClearRestore,
+                onDismiss = onCloseRestore,
+                onConfirm = onConfirmRestore,
+            )
+        }
     }
 }
 
@@ -179,6 +216,7 @@ private fun TvDebloatContent(
     onCancelAction: () -> Unit,
     onConfirmAction: () -> Unit,
     onUndo: () -> Unit,
+    onOpenRestore: () -> Unit,
     onDismissMessage: () -> Unit,
     onDismissError: () -> Unit,
 ) {
@@ -193,6 +231,9 @@ private fun TvDebloatContent(
             title = stringResource(R.string.debloat_title),
             subtitle = stringResource(R.string.debloat_subtitle_count, state.visible.size, state.selection.size),
             actions = {
+                TextButton(onClick = onOpenRestore, enabled = !state.running) {
+                    Text(stringResource(R.string.debloat_restore))
+                }
                 if (state.lastRun?.changes?.isNotEmpty() == true) {
                     TextButton(onClick = onUndo, enabled = !state.running) {
                         Text(stringResource(R.string.debloat_undo))
@@ -772,6 +813,75 @@ private fun ConfirmDialog(
     )
 }
 
+@Composable
+private fun RestoreDialog(
+    items: List<DebloatRestoreItem>,
+    selected: Set<String>,
+    onToggle: (String) -> Unit,
+    onSelectAll: () -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.SettingsBackupRestore, contentDescription = null) },
+        title = { Text(stringResource(R.string.debloat_restore_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    stringResource(R.string.debloat_restore_body, items.size),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = onSelectAll) { Text(stringResource(R.string.debloat_restore_select_all)) }
+                    TextButton(onClick = onClear) { Text(stringResource(R.string.debloat_restore_clear)) }
+                }
+                LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                    items(items, key = { it.packageName }) { item ->
+                        val checked = item.packageName in selected
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .toggleable(
+                                    value = checked,
+                                    role = Role.Checkbox,
+                                    onValueChange = { onToggle(item.packageName) },
+                                ).padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Checkbox(checked = checked, onCheckedChange = null)
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    item.label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    "${item.packageName} · ${stringResource(item.state.labelResource())}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm, enabled = selected.isNotEmpty()) {
+                Text(stringResource(R.string.debloat_restore_confirm, selected.size))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.profiles_cancel)) } },
+    )
+}
+
 private fun DebloatRisk.labelResource(): Int =
     when (this) {
         DebloatRisk.RECOMMENDED -> R.string.debloat_risk_recommended
@@ -793,4 +903,5 @@ private fun DebloatAction.confirmTitleResource(): Int =
         DebloatAction.FREEZE -> R.string.debloat_confirm_freeze_title
         DebloatAction.UNFREEZE -> R.string.debloat_confirm_unfreeze_title
         DebloatAction.UNINSTALL -> R.string.debloat_confirm_uninstall_title
+        DebloatAction.RESTORE -> R.string.debloat_confirm_restore_title
     }

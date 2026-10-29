@@ -7,6 +7,7 @@ import android.os.SystemClock
 import com.optimizer.tools.data.console.ConsoleHistoryStore
 import com.optimizer.tools.data.console.ConsoleRepository
 import com.optimizer.tools.data.debloat.DebloatCatalog
+import com.optimizer.tools.data.debloat.DebloatJournal
 import com.optimizer.tools.data.debloat.DebloatRepository
 import com.optimizer.tools.data.dpc.ApkDownloader
 import com.optimizer.tools.data.dpc.DpcRepository
@@ -193,7 +194,11 @@ class AppContainer(
     }
 
     val debloat: DebloatRepository by lazy {
-        DebloatRepository(DebloatCatalog(File(context.filesDir, "uad-lists.json")), ::profileShell)
+        DebloatRepository(
+            DebloatCatalog(File(context.filesDir, "uad-lists.json")),
+            DebloatJournal(File(context.filesDir, "debloat-journal.json")),
+            ::profileShell,
+        )
     }
 
     val files: RemoteFileRepository by lazy { RemoteFileRepository(::profileShell) }

@@ -9,6 +9,7 @@ import com.optimizer.tools.core.ui.asUiText
 import com.optimizer.tools.core.ui.uiText
 import com.optimizer.tools.domain.debloat.DebloatAction
 import com.optimizer.tools.domain.debloat.DebloatEntry
+import com.optimizer.tools.domain.debloat.DebloatRestoreItem
 import com.optimizer.tools.domain.debloat.DebloatRisk
 import com.optimizer.tools.domain.debloat.DebloatRun
 import com.optimizer.tools.domain.debloat.DebloatSuggestion
@@ -39,6 +40,9 @@ data class DebloatState(
     val total: Int = 0,
     val current: String? = null,
     val lastRun: DebloatRun? = null,
+    val restorable: List<DebloatRestoreItem> = emptyList(),
+    val restoreSelection: Set<String> = emptySet(),
+    val restoreOpen: Boolean = false,
     val message: UiText? = null,
     val error: UiText? = null,
 )
@@ -78,11 +82,14 @@ class DebloatViewModel(
             try {
                 apps = environment.apps()
                 states = environment.states()
+                val restorable = buildRestorable()
                 _state.update {
                     it.copy(
                         loading = false,
                         suggestions = buildSuggestions(),
                         visible = filterSuggestions(buildSuggestions(), it.query, it.risks),
+                        restorable = restorable,
+                        restoreSelection = it.restoreSelection.intersect(restorable.map(DebloatRestoreItem::packageName).toSet()),
                     )
                 }
             } catch (error: Exception) {
@@ -254,12 +261,110 @@ class DebloatViewModel(
         }
     }
 
+    /** Abre la lista de apps restaurables con todo seleccionado por defecto. */
+    fun openRestore() {
+        val items = _state.value.restorable
+        if (items.isEmpty()) {
+            _state.update { it.copy(message = uiText(R.string.debloat_message_nothing_to_restore)) }
+            return
+        }
+        _state.update {
+            it.copy(
+                restoreOpen = true,
+                restoreSelection = items.map(DebloatRestoreItem::packageName).toSet(),
+            )
+        }
+    }
+
+    fun closeRestore() {
+        _state.update { it.copy(restoreOpen = false) }
+    }
+
+    fun toggleRestore(packageName: String) {
+        _state.update { current ->
+            current.copy(
+                restoreSelection =
+                    if (packageName in current.restoreSelection) {
+                        current.restoreSelection - packageName
+                    } else {
+                        current.restoreSelection + packageName
+                    },
+            )
+        }
+    }
+
+    fun selectAllRestorable() {
+        _state.update { it.copy(restoreSelection = it.restorable.map(DebloatRestoreItem::packageName).toSet()) }
+    }
+
+    fun clearRestoreSelection() {
+        _state.update { it.copy(restoreSelection = emptySet()) }
+    }
+
+    fun confirmRestore() {
+        if (_state.value.running) return
+        val targets = _state.value.restoreSelection.toList()
+        if (targets.isEmpty()) {
+            _state.update { it.copy(restoreOpen = false) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    restoreOpen = false,
+                    running = true,
+                    done = 0,
+                    total = targets.size,
+                    current = null,
+                    message = null,
+                    error = null,
+                )
+            }
+            try {
+                val run =
+                    environment.restore(targets) { done, total, packageName ->
+                        _state.update { it.copy(done = done, total = total, current = packageName) }
+                    }
+                _state.update {
+                    it.copy(
+                        running = false,
+                        current = null,
+                        restoreSelection = emptySet(),
+                        lastRun = run,
+                        message =
+                            if (run.failures.isEmpty()) {
+                                uiText(R.string.debloat_message_restored, run.count)
+                            } else {
+                                uiText(R.string.debloat_message_partial, run.count, run.failures.size)
+                            },
+                    )
+                }
+                refresh()
+            } catch (error: Exception) {
+                _state.update {
+                    it.copy(
+                        running = false,
+                        current = null,
+                        error = error.message?.asUiText() ?: uiText(R.string.debloat_error),
+                    )
+                }
+            }
+        }
+    }
+
     fun dismissMessage() {
         _state.update { it.copy(message = null) }
     }
 
     fun dismissError() {
         _state.update { it.copy(error = null) }
+    }
+
+    private suspend fun buildRestorable(): List<DebloatRestoreItem> {
+        val byPackage = apps.associateBy { it.packageName }
+        return environment.restorable().map { item ->
+            item.copy(label = byPackage[item.packageName]?.displayName ?: item.packageName)
+        }
     }
 
     private fun buildSuggestions(): List<DebloatSuggestion> {
@@ -301,6 +406,7 @@ class DebloatViewModel(
                     DebloatAction.FREEZE -> suggestion.state == ProfileAppState.ENABLED
                     DebloatAction.UNFREEZE -> suggestion.state == ProfileAppState.DISABLED
                     DebloatAction.UNINSTALL -> suggestion.state != ProfileAppState.UNINSTALLED
+                    DebloatAction.RESTORE -> false
                 }
             }.map(DebloatSuggestion::packageName)
 
@@ -318,4 +424,5 @@ internal fun DebloatAction.messageResource(): Int =
         DebloatAction.FREEZE -> R.string.debloat_message_frozen
         DebloatAction.UNFREEZE -> R.string.debloat_message_unfrozen
         DebloatAction.UNINSTALL -> R.string.debloat_message_uninstalled
+        DebloatAction.RESTORE -> R.string.debloat_message_restored
     }

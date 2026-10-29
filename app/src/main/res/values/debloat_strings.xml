@@ -18,6 +18,8 @@
     <string name="debloat_message_uninstalled">%1$d apps desinstaladas para este usuario.</string>
     <string name="debloat_message_partial">%1$d cambios aplicados; %2$d apps fallaron.</string>
     <string name="debloat_message_undone">%1$d apps vueltas a su estado anterior.</string>
+    <string name="debloat_message_restored">%1$d apps restauradas y confirmadas.</string>
+    <string name="debloat_message_nothing_to_restore">No hay apps congeladas o desinstaladas por el debloater.</string>
     <string name="debloat_message_nothing_applicable">La selección no tiene apps a las que aplicar esa acción.</string>
     <string name="debloat_search">Buscar app o paquete</string>
     <string name="debloat_count">%1$d de %2$d paquetes del catálogo</string>
@@ -52,4 +54,11 @@
     <string name="debloat_warning_title">Antes de continuar</string>
     <string name="debloat_warning_body">El launcher actual está protegido. Nada se ejecuta hasta confirmar y todo queda en el historial para deshacer.</string>
     <string name="debloat_review_count">Revisar %1$d apps</string>
+    <string name="debloat_restore">Restaurar</string>
+    <string name="debloat_restore_title">Restaurar apps</string>
+    <string name="debloat_restore_body">%1$d apps congeladas o desinstaladas por el debloater. Al restaurarlas vuelven a estar activas para este usuario.</string>
+    <string name="debloat_restore_select_all">Todas</string>
+    <string name="debloat_restore_clear">Ninguna</string>
+    <string name="debloat_restore_confirm">Restaurar %1$d</string>
+    <string name="debloat_confirm_restore_title">Restaurar apps</string>
 </resources>

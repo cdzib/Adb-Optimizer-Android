@@ -2,6 +2,7 @@ package com.optimizer.tools.feature.debloat
 
 import com.optimizer.tools.domain.debloat.DebloatAction
 import com.optimizer.tools.domain.debloat.DebloatEntry
+import com.optimizer.tools.domain.debloat.DebloatRestoreItem
 import com.optimizer.tools.domain.debloat.DebloatRisk
 import com.optimizer.tools.domain.debloat.DebloatRun
 import com.optimizer.tools.domain.profile.ProfileAppState
@@ -132,14 +133,64 @@ class DebloatViewModelTest {
             assertEquals(1, environment.undos)
         }
 
+    @Test
+    fun `restaurar abre la lista con todo seleccionado`() =
+        runViewModelTest {
+            val viewModel = DebloatViewModel(FakeEnvironment(catalog = catalog))
+            viewModel.onEnter()
+            runCurrent()
+
+            viewModel.openRestore()
+
+            assertTrue(viewModel.state.value.restoreOpen)
+            assertEquals(setOf("com.samsung.android.bixby.agent"), viewModel.state.value.restoreSelection)
+        }
+
+    @Test
+    fun `confirmar restauracion pide al entorno y cierra el dialogo`() =
+        runViewModelTest {
+            val environment = FakeEnvironment(catalog = catalog)
+            val viewModel = DebloatViewModel(environment)
+            viewModel.onEnter()
+            runCurrent()
+
+            viewModel.openRestore()
+            viewModel.confirmRestore()
+            runCurrent()
+
+            assertEquals(1, environment.restores)
+            assertEquals(listOf("com.samsung.android.bixby.agent"), environment.restoredTargets)
+            assertEquals(false, viewModel.state.value.restoreOpen)
+            assertNotNull(viewModel.state.value.message)
+        }
+
+    @Test
+    fun `restaurar sin apps pendientes solo avisa`() =
+        runViewModelTest {
+            val viewModel = DebloatViewModel(FakeEnvironment(catalog = catalog, restorablePackages = emptyList()))
+            viewModel.onEnter()
+            runCurrent()
+
+            viewModel.openRestore()
+
+            assertEquals(false, viewModel.state.value.restoreOpen)
+            assertNotNull(viewModel.state.value.message)
+        }
+
     private class FakeEnvironment(
         private val device: Boolean = true,
         private val catalog: List<DebloatEntry> = emptyList(),
         private val downloadable: List<DebloatEntry>? = null,
+        private val restorablePackages: List<DebloatRestoreItem> =
+            listOf(
+                DebloatRestoreItem("com.samsung.android.bixby.agent", "Bixby", ProfileAppState.DISABLED),
+            ),
     ) : DebloatEnvironment {
         var actions = mutableListOf<DebloatAction>()
         var targets: List<String> = emptyList()
         var undos = 0
+        var restores = 0
+        var restoredTargets: List<String> = emptyList()
 
         override fun hasDevice(): Boolean = device
 
@@ -164,6 +215,25 @@ class DebloatViewModelTest {
                 "com.samsung.android.bixby.agent" to ProfileAppState.DISABLED,
                 "com.example.other" to ProfileAppState.ENABLED,
             )
+
+        override suspend fun restorable(): List<DebloatRestoreItem> = restorablePackages
+
+        override suspend fun restore(
+            targets: List<String>,
+            onProgress: (Int, Int, String) -> Unit,
+        ): DebloatRun {
+            restores++
+            restoredTargets = targets
+            targets.forEachIndexed { index, packageName -> onProgress(index + 1, targets.size, packageName) }
+            return DebloatRun(
+                action = DebloatAction.RESTORE,
+                changes =
+                    targets.map {
+                        com.optimizer.tools.domain.profile
+                            .ProfileChange(it, ProfileAppState.DISABLED, ProfileAppState.ENABLED)
+                    },
+            )
+        }
 
         override suspend fun apply(
             action: DebloatAction,
