@@ -1,9 +1,11 @@
 <resources>
     <string name="localadb_title">ADB local</string>
-    <string name="localadb_subtitle">127.0.0.1:5555 · este dispositivo</string>
+    <string name="localadb_subtitle">Depuración inalámbrica o 127.0.0.1:5555 · este dispositivo</string>
     <string name="localadb_status_off">Depuración USB desactivada</string>
     <string name="localadb_status_connecting">Conectando…</string>
     <string name="localadb_status_waiting">Esperando autorización</string>
+    <string name="localadb_status_pairing">Buscando vinculación</string>
+    <string name="localadb_status_waiting_code">Esperando código</string>
     <string name="localadb_status_connected">Conectado</string>
     <string name="localadb_status_error">Sin conexión</string>
     <string name="localadb_off_title_dev">Activa Opciones de desarrollador</string>
@@ -24,7 +26,7 @@
     <string name="localadb_waiting_body">Marca “Permitir siempre” en el diálogo RSA para conservar el acceso. Si no aparece, revisa la pantalla y vuelve a intentarlo.</string>
     <string name="localadb_attempt">Intento %1$d de %2$d</string>
     <string name="localadb_error_port_title">El puerto 5555 está cerrado</string>
-    <string name="localadb_error_port_body">La depuración USB está activa, pero adbd no escucha en TCP. Con el teléfono conectado por USB, ejecuta en un PC:\n\nadb tcpip 5555\n\nEn TV o proyector activa “Depuración ADB por red” en Opciones de desarrollador. Después pulsa Reintentar.</string>
+    <string name="localadb_error_port_body">adbd no acepta la conexión. Activa «Depuración inalámbrica» en Opciones de desarrollador y pulsa Reintentar. Si tu equipo solo ofrece depuración USB, conéctalo a un PC y ejecuta una vez:\n\nadb tcpip 5555</string>
     <string name="localadb_error_auth_title">Autorización pendiente o denegada</string>
     <string name="localadb_error_auth_body">No se recibió permiso RSA. Acepta “Permitir siempre” en el dispositivo y vuelve a intentarlo.</string>
     <string name="localadb_error_disconnected_title">La sesión se cerró</string>
@@ -42,5 +44,19 @@
     <string name="localadb_exit_error">exit %1$d</string>
     <string name="localadb_duration">%1$d ms</string>
     <string name="localadb_log_title">Registro de conexión</string>
+    <string name="localadb_endpoint_local">este dispositivo</string>
+    <string name="localadb_pairing_searching_title">Buscando el puerto de vinculación</string>
+    <string name="localadb_pairing_searching_body">Abre Opciones de desarrollador → Depuración inalámbrica y toca «Vincular dispositivo con código». La app detecta el puerto automáticamente.</string>
+    <string name="localadb_pairing_title">Escribe el código de vinculación</string>
+    <string name="localadb_pairing_body">Android muestra un código de 6 dígitos en el diálogo de vinculación. Escríbelo aquí para autorizar esta app; solo hace falta una vez.</string>
+    <string name="localadb_pairing_port">Puerto de vinculación: %1$d</string>
+    <string name="localadb_pairing_code_hint">Código de 6 dígitos</string>
+    <string name="localadb_pairing_confirm">Vincular</string>
+    <string name="localadb_pairing_working">Vinculando…</string>
+    <string name="localadb_pairing_action">Vincular con código</string>
+    <string name="localadb_error_pairing_title">Falta vincular la depuración inalámbrica</string>
+    <string name="localadb_error_pairing_body">Android 11 o superior exige vincular antes de aceptar la sesión. Activa «Depuración inalámbrica», toca «Vincular dispositivo con código» y pulsa «Vincular con código» aquí.</string>
+    <string name="localadb_error_pairing_failed_title">No se pudo vincular</string>
+    <string name="localadb_error_pairing_failed_body">Revisa que el código sea el que muestra el diálogo y que la depuración inalámbrica siga activa. Vuelve a intentarlo.</string>
     <string name="localadb_tools_description">Conecta por 127.0.0.1 y ejecuta comandos shell</string>
 </resources>

@@ -130,6 +130,61 @@ class LocalAdbViewModelTest {
         }
 
     @Test
+    fun `pairing required is reported without retries`() =
+        runViewModelTest {
+            val environment = FakeLocalAdbEnvironment(connectError = { LocalAdbException.PairingRequired() })
+            val viewModel = LocalAdbViewModel(environment)
+            viewModel.onResume()
+
+            advanceUntilIdle()
+
+            assertEquals(LocalAdbPhase.ERROR, viewModel.state.value.phase)
+            assertEquals(LocalAdbErrorKind.PAIRING_REQUIRED, viewModel.state.value.errorKind)
+            assertEquals(1, environment.connectCalls)
+        }
+
+    @Test
+    fun `pairing discovers the port and asks for the code`() =
+        runViewModelTest {
+            val environment = FakeLocalAdbEnvironment(pairingPort = 41234)
+            val viewModel = LocalAdbViewModel(environment)
+
+            viewModel.startPairing()
+            advanceUntilIdle()
+
+            assertEquals(LocalAdbPhase.WAITING_PAIRING_CODE, viewModel.state.value.phase)
+            assertEquals(41234, viewModel.state.value.pairingPort)
+
+            viewModel.setPairingCode("12a34567")
+            assertEquals("123456", viewModel.state.value.pairingCode)
+
+            viewModel.confirmPairing()
+            advanceUntilIdle()
+
+            assertEquals(41234 to "123456", environment.pairedWith)
+            assertEquals(LocalAdbPhase.CONNECTED, viewModel.state.value.phase)
+        }
+
+    @Test
+    fun `pairing failure keeps the code form open`() =
+        runViewModelTest {
+            val environment =
+                FakeLocalAdbEnvironment(
+                    pairError = { LocalAdbException.PairingFailed() },
+                )
+            val viewModel = LocalAdbViewModel(environment)
+
+            viewModel.startPairing()
+            advanceUntilIdle()
+            viewModel.setPairingCode("123456")
+            viewModel.confirmPairing()
+            advanceUntilIdle()
+
+            assertEquals(LocalAdbPhase.WAITING_PAIRING_CODE, viewModel.state.value.phase)
+            assertEquals(LocalAdbErrorKind.PAIRING_FAILED, viewModel.state.value.errorKind)
+        }
+
+    @Test
     fun `shell result is appended with exit code`() =
         runViewModelTest {
             val environment = FakeLocalAdbEnvironment()
@@ -157,12 +212,18 @@ private class FakeLocalAdbEnvironment(
     private val authorized: Boolean = false,
     private val connectError: () -> LocalAdbException? = { null },
     private val failConnectTimes: Int = Int.MAX_VALUE,
+    private val pairingPort: Int = 41234,
+    private val pairError: () -> LocalAdbException? = { null },
 ) : LocalAdbEnvironment {
     var connectCalls = 0
     var disconnected = false
+    var pairedWith: Pair<Int, String>? = null
     private val logsFlow = MutableStateFlow<List<String>>(emptyList())
+    private val endpointFlow = MutableStateFlow<String?>(null)
 
     override val logs: StateFlow<List<String>> = logsFlow
+
+    override val endpoint: StateFlow<String?> = endpointFlow
 
     override fun log(message: String) {
         logsFlow.value = logsFlow.value + message
@@ -173,6 +234,16 @@ private class FakeLocalAdbEnvironment(
     override fun isDeveloperOptionsEnabled(): Boolean = false
 
     override fun isAuthorized(): Boolean = authorized
+
+    override suspend fun discoverPairingPort(): Int = pairingPort
+
+    override suspend fun pair(
+        port: Int,
+        code: String,
+    ) {
+        pairError()?.let { throw it }
+        pairedWith = port to code
+    }
 
     override suspend fun connect() {
         connectCalls += 1

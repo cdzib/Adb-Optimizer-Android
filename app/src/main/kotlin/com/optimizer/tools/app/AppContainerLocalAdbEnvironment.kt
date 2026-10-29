@@ -3,6 +3,8 @@ package com.optimizer.tools.app
 import com.optimizer.tools.data.AppContainer
 import com.optimizer.tools.feature.localadb.domain.CheckAdbEnabled
 import com.optimizer.tools.feature.localadb.domain.ConnectAdb
+import com.optimizer.tools.feature.localadb.domain.DiscoverPairingPort
+import com.optimizer.tools.feature.localadb.domain.PairAdb
 import com.optimizer.tools.feature.localadb.domain.RunShellCommand
 import com.optimizer.tools.feature.localadb.domain.ShellCommandResult
 import com.optimizer.tools.feature.localadb.presentation.LocalAdbEnvironment
@@ -15,9 +17,13 @@ internal class AppContainerLocalAdbEnvironment(
     private val repository = container.localAdb
     private val checkAdbEnabled = CheckAdbEnabled(repository)
     private val connectAdb = ConnectAdb(repository)
+    private val discoverPort = DiscoverPairingPort(repository)
+    private val pairAdb = PairAdb(repository)
     private val runShellCommand = RunShellCommand(repository)
 
     override val logs: StateFlow<List<String>> = repository.logs
+
+    override val endpoint: StateFlow<String?> = repository.endpoint
 
     override fun log(message: String) = repository.appendLog(message)
 
@@ -26,6 +32,13 @@ internal class AppContainerLocalAdbEnvironment(
     override fun isDeveloperOptionsEnabled(): Boolean = repository.isDeveloperOptionsEnabled()
 
     override fun isAuthorized(): Boolean = repository.isAuthorized()
+
+    override suspend fun discoverPairingPort(): Int = discoverPort()
+
+    override suspend fun pair(
+        port: Int,
+        code: String,
+    ) = pairAdb(port, code)
 
     override suspend fun connect() = connectAdb()
 

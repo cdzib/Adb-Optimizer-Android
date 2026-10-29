@@ -13,11 +13,11 @@ interface LocalAdbTransport : AdbShell {
 }
 
 /**
- * Envuelve el repositorio dadb para exponerlo como [AdbShell] sin que las features
- * conozcan la librería ni el par de llaves.
+ * Envuelve el repositorio local para exponerlo como [AdbShell] sin que las features
+ * conozcan la librería ADB ni la identidad TLS.
  */
 class LocalAdbShell(
-    private val repository: DadbLocalAdbRepository,
+    private val repository: LibAdbLocalAdbRepository,
 ) : LocalAdbTransport {
     override fun isConnected(): Boolean = repository.isConnected()
 

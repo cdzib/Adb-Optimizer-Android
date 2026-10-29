@@ -101,10 +101,6 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:adb"))
     implementation(project(":core:optimization"))
-    implementation(libs.dadb) {
-        // dadb publica junit-platform-native en runtime; no debe viajar en el APK.
-        exclude(group = "org.graalvm.buildtools", module = "junit-platform-native")
-    }
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

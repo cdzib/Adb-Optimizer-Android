@@ -34,6 +34,10 @@ data class LocalAdbUiState(
     val attempt: Int = 0,
     val developerOptionsEnabled: Boolean = false,
     val log: List<String> = emptyList(),
+    val endpoint: String? = null,
+    val pairingPort: Int? = null,
+    val pairingCode: String = "",
+    val pairingBusy: Boolean = false,
 )
 
 class LocalAdbViewModel(
@@ -48,6 +52,9 @@ class LocalAdbViewModel(
     init {
         viewModelScope.launch {
             environment.logs.collect { lines -> _state.update { it.copy(log = lines) } }
+        }
+        viewModelScope.launch {
+            environment.endpoint.collect { endpoint -> _state.update { it.copy(endpoint = endpoint) } }
         }
         // Si ya se aceptó el diálogo RSA, reconecta al abrir la app sin volver a preguntar.
         if (environment.isAuthorized() && environment.isAdbEnabled()) {
@@ -65,6 +72,8 @@ class LocalAdbViewModel(
 
             LocalAdbPhase.CONNECTING,
             LocalAdbPhase.WAITING_AUTHORIZATION,
+            LocalAdbPhase.PAIRING,
+            LocalAdbPhase.WAITING_PAIRING_CODE,
             -> Unit
 
             else -> if (environment.isAdbEnabled() && environment.isAuthorized()) connect()
@@ -78,7 +87,12 @@ class LocalAdbViewModel(
             verifyConnection()
             return
         }
-        if (phase == LocalAdbPhase.CONNECTING || phase == LocalAdbPhase.WAITING_AUTHORIZATION) {
+        if (
+            phase == LocalAdbPhase.CONNECTING ||
+            phase == LocalAdbPhase.WAITING_AUTHORIZATION ||
+            phase == LocalAdbPhase.PAIRING ||
+            phase == LocalAdbPhase.WAITING_PAIRING_CODE
+        ) {
             return
         }
         refresh()
@@ -156,6 +170,11 @@ class LocalAdbViewModel(
                                 return@launch
                             }
 
+                            LocalAdbErrorKind.PAIRING_REQUIRED -> {
+                                fail(error, LocalAdbPhase.ERROR)
+                                return@launch
+                            }
+
                             LocalAdbErrorKind.AUTHORIZATION -> {
                                 if (attempt >= MAX_ATTEMPTS) {
                                     fail(error, LocalAdbPhase.ERROR)
@@ -187,6 +206,97 @@ class LocalAdbViewModel(
 
     fun retry() {
         refresh()
+    }
+
+    /**
+     * Busca el puerto de `adb-tls-pairing`. Cuando aparece, la pantalla pide el código
+     * de 6 dígitos que Android muestra en «Vincular dispositivo con código».
+     */
+    fun startPairing() {
+        if (_state.value.pairingBusy) return
+        connectJob?.cancel()
+        viewModelScope.launch {
+            _state.update {
+                it.copy(
+                    phase = LocalAdbPhase.PAIRING,
+                    pairingPort = null,
+                    pairingCode = "",
+                    pairingBusy = false,
+                    errorKind = null,
+                    detail = null,
+                )
+            }
+            try {
+                val port = environment.discoverPairingPort()
+                _state.update {
+                    it.copy(phase = LocalAdbPhase.WAITING_PAIRING_CODE, pairingPort = port)
+                }
+            } catch (error: Exception) {
+                _state.update {
+                    it.copy(
+                        phase = LocalAdbPhase.ERROR,
+                        errorKind = (error as? LocalAdbException)?.kind ?: LocalAdbErrorKind.PAIRING_FAILED,
+                        detail = error.message,
+                    )
+                }
+            }
+        }
+    }
+
+    fun setPairingCode(code: String) {
+        _state.update { it.copy(pairingCode = code.filter(Char::isDigit).take(PAIRING_CODE_LENGTH)) }
+    }
+
+    fun cancelPairing() {
+        _state.update {
+            it.copy(
+                phase = LocalAdbPhase.ERROR,
+                pairingPort = null,
+                pairingCode = "",
+                pairingBusy = false,
+                errorKind = LocalAdbErrorKind.PAIRING_REQUIRED,
+                detail = null,
+            )
+        }
+    }
+
+    fun confirmPairing() {
+        val port = _state.value.pairingPort ?: return
+        val code = _state.value.pairingCode
+        if (code.length != PAIRING_CODE_LENGTH || _state.value.pairingBusy) return
+        viewModelScope.launch {
+            _state.update { it.copy(pairingBusy = true, errorKind = null, detail = null) }
+            try {
+                environment.pair(port, code)
+                _state.update {
+                    it.copy(
+                        pairingBusy = false,
+                        pairingPort = null,
+                        pairingCode = "",
+                        phase = LocalAdbPhase.CONNECTING,
+                    )
+                }
+                connect()
+            } catch (error: LocalAdbException) {
+                _state.update {
+                    it.copy(
+                        pairingBusy = false,
+                        phase = LocalAdbPhase.WAITING_PAIRING_CODE,
+                        errorKind = error.kind,
+                        detail = error.message,
+                    )
+                }
+            } catch (error: Exception) {
+                _state.update {
+                    it.copy(
+                        pairingBusy = false,
+                        phase = LocalAdbPhase.WAITING_PAIRING_CODE,
+                        errorKind = LocalAdbErrorKind.PAIRING_FAILED,
+                        detail = error.message,
+                    )
+                }
+            }
+        }
     }
 
     private fun verifyConnection() {
@@ -286,6 +396,7 @@ class LocalAdbViewModel(
         private const val BACKOFF_MS = 1_500L
         private const val WAITING_DELAY_MS = 600L
         private const val MAX_ENTRIES = 30
+        private const val PAIRING_CODE_LENGTH = 6
 
         fun factory(environment: LocalAdbEnvironment): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {

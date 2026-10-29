@@ -31,7 +31,7 @@ import com.optimizer.tools.domain.model.ShizukuLocalStatus
 import com.optimizer.tools.domain.model.deduplicateKnownDevices
 import com.optimizer.tools.domain.port.ApkInstaller
 import com.optimizer.tools.domain.usecase.InstallHostAppsUseCase
-import com.optimizer.tools.feature.localadb.data.DadbLocalAdbRepository
+import com.optimizer.tools.feature.localadb.data.LibAdbLocalAdbRepository
 import com.optimizer.tools.feature.localadb.data.LocalAdbShell
 import com.optimizer.tools.feature.termux.data.TermuxRepositoryImpl
 import dev.adboptimizer.core.adb.AdbConnectionFactory
@@ -137,7 +137,7 @@ class AppContainer(
     val shizukuLocalAccess: ShizukuLocalAccess by lazy { ShizukuLocalAccess(context) }
 
     /** Sesión ADB del propio equipo por 127.0.0.1:5555 (feature ADB local). */
-    val localAdb: DadbLocalAdbRepository by lazy { DadbLocalAdbRepository(context, logger = logger) }
+    val localAdb: LibAdbLocalAdbRepository by lazy { LibAdbLocalAdbRepository(context, logger = logger) }
 
     /** Integración con Termux: comandos Linux y recetas sobre RUN_COMMAND (feature Termux). */
     val termux: TermuxRepositoryImpl by lazy { TermuxRepositoryImpl(context) }

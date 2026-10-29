@@ -1,19 +1,20 @@
-# ADB local (127.0.0.1:5555)
+# ADB local (depuración inalámbrica y 127.0.0.1:5555)
 
 Estado: implementado.
 
 ## Objetivo
 
-Permitir que la app use la depuración USB del propio equipo sin PC: detectar
-`Settings.Global.ADB_ENABLED`, guiar al usuario, conectar por `127.0.0.1:5555`,
-autorizar la llave RSA y ejecutar comandos shell.
+Permitir que la app use la depuración del propio equipo sin PC: detectar
+`Settings.Global.ADB_ENABLED` / `adb_wifi_enabled`, guiar al usuario, descubrir el
+puerto de la depuración inalámbrica, vincular con el código de 6 dígitos, conectar
+por `127.0.0.1` y ejecutar comandos shell.
 
 ## Capas
 
 - `feature/localadb/domain`: `LocalAdbRepository`, modelos, errores y casos de uso
   `CheckAdbEnabled`, `ConnectAdb`, `RunShellCommand`.
-- `feature/localadb/data`: `DadbLocalAdbRepository` sobre dadb, llaves en
-  `filesDir/local-adb/adbkey(.pub)` y `LocalAdbShell` como `AdbShell`.
+- `feature/localadb/data`: `LibAdbLocalAdbRepository` sobre `core:adb` (libadb),
+  identidad RSA en `AdbKeys` y `LocalAdbShell` como `AdbShell`.
 - `feature/localadb/presentation`: `LocalAdbViewModel` (MVVM+MVI, estados
   `DEBUGGING_OFF`, `CONNECTING`, `WAITING_AUTHORIZATION`, `CONNECTED`, `ERROR`) y
   `LocalAdbScreen`.
@@ -37,14 +38,16 @@ autorizar la llave RSA y ejecutar comandos shell.
 
 ## Límites conocidos
 
-- Una app no puede activar la depuración USB: solo se detecta y se abre Ajustes.
-- adbd debe escuchar en TCP 5555 (`adb tcpip 5555` desde PC o depuración por red).
-- La primera conexión exige aceptar el diálogo RSA (“Permitir siempre”); se espera
-  hasta 60 s para que dé tiempo a aceptarlo.
-- Tras autorizar, la app recuerda la llave y reconecta sola al abrir o volver
-  (`onAppResumed`), sin volver a preguntar; también verifica la sesión y reconecta
-  si adbd la cerró.
+- Una app no puede activar la depuración: solo se detecta y se abre Ajustes.
+- **Android 11+ no permite `adb tcpip 5555` desde el propio teléfono.** La ruta
+  normal es la depuración inalámbrica: la app descubre por mDNS `adb-tls-pairing`
+  (puerto de vinculación) y `adb-tls-connect` (puerto TLS), vincula con el código de
+  6 dígitos y conecta por `127.0.0.1`. Se apoya en `core:adb` (libadb), el mismo
+  transporte que se usa para dispositivos remotos.
+- La vinculación solo hace falta una vez; la identidad RSA se guarda en
+  `AdbKeys` y se reutiliza en las siguientes conexiones.
+- El ADB clásico en `127.0.0.1:5555` sigue soportado como respaldo para equipos
+  donde un PC ya ejecutó `adb tcpip 5555` o para Android antiguos.
+- La primera conexión clásica exige aceptar el diálogo RSA; se espera hasta 60 s.
 - Logcat, Doze y Ajustes del sistema siguen ligados a una sesión remota; su
   adaptación completa al shell local queda pendiente.
-- dadb publica `junit-platform-native` en runtime; se excluye en Gradle para no
-  empaquetar JUnit en el APK.

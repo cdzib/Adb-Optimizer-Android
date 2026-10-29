@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,6 +32,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -44,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -115,10 +118,24 @@ fun LocalAdbScreen(
                 WaitingContent(state)
             }
 
+            LocalAdbPhase.PAIRING -> {
+                PairingSearchContent()
+            }
+
+            LocalAdbPhase.WAITING_PAIRING_CODE -> {
+                PairingCodeContent(
+                    state = state,
+                    onCode = viewModel::setPairingCode,
+                    onConfirm = viewModel::confirmPairing,
+                    onCancel = viewModel::cancelPairing,
+                )
+            }
+
             LocalAdbPhase.ERROR -> {
                 ErrorContent(
                     state = state,
                     onRetry = viewModel::retry,
+                    onStartPairing = viewModel::startPairing,
                     onOpenSettings = { openDeveloperSettings(context) },
                 )
             }
@@ -189,11 +206,14 @@ private const val MAX_LOG_LINES_VISIBLE = 20
 
 @Composable
 private fun StatusStrip(state: LocalAdbUiState) {
+    val waitingCode = stringResource(R.string.localadb_status_waiting_code)
     val (label, color) =
         when (state.phase) {
             LocalAdbPhase.DEBUGGING_OFF -> stringResource(R.string.localadb_status_off) to MaterialTheme.colorScheme.onSurfaceVariant
             LocalAdbPhase.CONNECTING -> stringResource(R.string.localadb_status_connecting) to MaterialTheme.colorScheme.tertiary
             LocalAdbPhase.WAITING_AUTHORIZATION -> stringResource(R.string.localadb_status_waiting) to MaterialTheme.colorScheme.tertiary
+            LocalAdbPhase.PAIRING -> stringResource(R.string.localadb_status_pairing) to MaterialTheme.colorScheme.tertiary
+            LocalAdbPhase.WAITING_PAIRING_CODE -> waitingCode to MaterialTheme.colorScheme.tertiary
             LocalAdbPhase.CONNECTED -> stringResource(R.string.localadb_status_connected) to MaterialTheme.colorScheme.primary
             LocalAdbPhase.ERROR -> stringResource(R.string.localadb_status_error) to MaterialTheme.colorScheme.error
         }
@@ -215,7 +235,7 @@ private fun StatusStrip(state: LocalAdbUiState) {
         )
         Box(Modifier.weight(1f))
         Text(
-            "127.0.0.1:5555",
+            state.endpoint ?: stringResource(R.string.localadb_endpoint_local),
             style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -368,9 +388,101 @@ private fun WaitingContent(state: LocalAdbUiState) {
 }
 
 @Composable
+private fun PairingSearchContent() {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 2.dp)
+        Text(stringResource(R.string.localadb_pairing_searching_title), style = MaterialTheme.typography.titleSmall)
+        Text(
+            stringResource(R.string.localadb_pairing_searching_body),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun PairingCodeContent(
+    state: LocalAdbUiState,
+    onCode: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(stringResource(R.string.localadb_pairing_title), style = MaterialTheme.typography.titleSmall)
+        Text(
+            stringResource(R.string.localadb_pairing_body),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        state.pairingPort?.let { port ->
+            Text(
+                stringResource(R.string.localadb_pairing_port, port),
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        OutlinedTextField(
+            value = state.pairingCode,
+            onValueChange = onCode,
+            label = { Text(stringResource(R.string.localadb_pairing_code_hint)) },
+            singleLine = true,
+            enabled = !state.pairingBusy,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        state.detail?.takeIf { it.isNotBlank() }?.let { detail ->
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PillButton(
+                text = stringResource(R.string.profiles_cancel),
+                onClick = onCancel,
+                enabled = !state.pairingBusy,
+                style = PillStyle.Outline,
+                modifier = Modifier.weight(1f),
+            )
+            PillButton(
+                text =
+                    if (state.pairingBusy) {
+                        stringResource(R.string.localadb_pairing_working)
+                    } else {
+                        stringResource(R.string.localadb_pairing_confirm)
+                    },
+                onClick = onConfirm,
+                enabled = state.pairingCode.length == PAIRING_CODE_LENGTH && !state.pairingBusy,
+                style = PillStyle.Solid,
+                modifier = Modifier.weight(2f),
+            )
+        }
+    }
+}
+
+private const val PAIRING_CODE_LENGTH = 6
+
+@Composable
 private fun ErrorContent(
     state: LocalAdbUiState,
     onRetry: () -> Unit,
+    onStartPairing: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     val kind = state.errorKind ?: LocalAdbErrorKind.UNKNOWN
@@ -379,6 +491,8 @@ private fun ErrorContent(
             LocalAdbErrorKind.PORT_CLOSED -> R.string.localadb_error_port_title
             LocalAdbErrorKind.AUTHORIZATION -> R.string.localadb_error_auth_title
             LocalAdbErrorKind.DISCONNECTED -> R.string.localadb_error_disconnected_title
+            LocalAdbErrorKind.PAIRING_REQUIRED -> R.string.localadb_error_pairing_title
+            LocalAdbErrorKind.PAIRING_FAILED -> R.string.localadb_error_pairing_failed_title
             LocalAdbErrorKind.TIMEOUT -> R.string.localadb_error_unknown_title
             LocalAdbErrorKind.UNKNOWN -> R.string.localadb_error_unknown_title
         }
@@ -387,6 +501,8 @@ private fun ErrorContent(
             LocalAdbErrorKind.PORT_CLOSED -> R.string.localadb_error_port_body
             LocalAdbErrorKind.AUTHORIZATION -> R.string.localadb_error_auth_body
             LocalAdbErrorKind.DISCONNECTED -> R.string.localadb_error_disconnected_body
+            LocalAdbErrorKind.PAIRING_REQUIRED -> R.string.localadb_error_pairing_body
+            LocalAdbErrorKind.PAIRING_FAILED -> R.string.localadb_error_pairing_failed_body
             LocalAdbErrorKind.TIMEOUT -> R.string.localadb_error_unknown_body
             LocalAdbErrorKind.UNKNOWN -> R.string.localadb_error_unknown_body
         }
@@ -424,18 +540,33 @@ private fun ErrorContent(
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PillButton(
-                text = stringResource(R.string.localadb_retry),
-                onClick = onRetry,
-                style = PillStyle.Solid,
-                modifier = Modifier.weight(1f),
-            )
-            PillButton(
-                text = stringResource(R.string.localadb_open_dev_settings),
-                onClick = onOpenSettings,
-                style = PillStyle.Outline,
-                modifier = Modifier.weight(1f),
-            )
+            if (kind == LocalAdbErrorKind.PAIRING_REQUIRED || kind == LocalAdbErrorKind.PAIRING_FAILED) {
+                PillButton(
+                    text = stringResource(R.string.localadb_pairing_action),
+                    onClick = onStartPairing,
+                    style = PillStyle.Solid,
+                    modifier = Modifier.weight(1f),
+                )
+                PillButton(
+                    text = stringResource(R.string.localadb_retry),
+                    onClick = onRetry,
+                    style = PillStyle.Outline,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                PillButton(
+                    text = stringResource(R.string.localadb_retry),
+                    onClick = onRetry,
+                    style = PillStyle.Solid,
+                    modifier = Modifier.weight(1f),
+                )
+                PillButton(
+                    text = stringResource(R.string.localadb_open_dev_settings),
+                    onClick = onOpenSettings,
+                    style = PillStyle.Outline,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }
