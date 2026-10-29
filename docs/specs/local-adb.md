@@ -52,6 +52,9 @@ por `127.0.0.1` y ejecutar comandos shell.
   código sin volver a la app; `LocalAdbPairingService` vincula y conecta.
 - La app mantiene además el formulario de código en pantalla como respaldo si
   las notificaciones están desactivadas.
+- Al volver a la app (desde Ajustes o la notificación) se valida la sesión local:
+  si el servicio ya vinculó y conectó, pasa a *Conectado*; si no, reintenta la
+  conexión y muestra el motivo.
 - El ADB clásico en `127.0.0.1:5555` sigue soportado como respaldo para equipos
   donde un PC ya ejecutó `adb tcpip 5555` o para Android antiguos.
 - La primera conexión clásica exige aceptar el diálogo RSA; se espera hasta 60 s.

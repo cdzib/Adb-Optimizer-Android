@@ -166,6 +166,24 @@ class LocalAdbViewModelTest {
         }
 
     @Test
+    fun `returning to the app validates the local session`() =
+        runViewModelTest {
+            val environment = FakeLocalAdbEnvironment()
+            val viewModel = LocalAdbViewModel(environment)
+
+            viewModel.startPairing()
+            advanceUntilIdle()
+            assertEquals(LocalAdbPhase.WAITING_PAIRING_CODE, viewModel.state.value.phase)
+            assertEquals(0, environment.connectCalls)
+
+            viewModel.onResume()
+            advanceUntilIdle()
+
+            assertEquals(1, environment.connectCalls)
+            assertEquals(LocalAdbPhase.CONNECTED, viewModel.state.value.phase)
+        }
+
+    @Test
     fun `pairing failure keeps the code form open`() =
         runViewModelTest {
             val environment =

@@ -47,6 +47,7 @@ class LocalAdbViewModel(
     val state: StateFlow<LocalAdbUiState> = _state.asStateFlow()
 
     private var connectJob: Job? = null
+    private var pairingJob: Job? = null
     private var checkingConnection = false
 
     init {
@@ -88,9 +89,11 @@ class LocalAdbViewModel(
 
             LocalAdbPhase.CONNECTING,
             LocalAdbPhase.WAITING_AUTHORIZATION,
+            -> Unit
+
             LocalAdbPhase.PAIRING,
             LocalAdbPhase.WAITING_PAIRING_CODE,
-            -> Unit
+            -> validateAfterPairing()
 
             else -> if (environment.isAdbEnabled() && environment.isAuthorized()) connect()
         }
@@ -103,12 +106,13 @@ class LocalAdbViewModel(
             verifyConnection()
             return
         }
-        if (
-            phase == LocalAdbPhase.CONNECTING ||
-            phase == LocalAdbPhase.WAITING_AUTHORIZATION ||
-            phase == LocalAdbPhase.PAIRING ||
-            phase == LocalAdbPhase.WAITING_PAIRING_CODE
-        ) {
+        if (phase == LocalAdbPhase.CONNECTING || phase == LocalAdbPhase.WAITING_AUTHORIZATION) {
+            return
+        }
+        if (phase == LocalAdbPhase.PAIRING || phase == LocalAdbPhase.WAITING_PAIRING_CODE) {
+            // Al volver de Ajustes puede que la vinculación ya se haya hecho (o no):
+            // se valida la sesión local en lugar de dejar la pantalla congelada.
+            validateAfterPairing()
             return
         }
         refresh()
@@ -231,37 +235,47 @@ class LocalAdbViewModel(
     fun startPairing() {
         if (_state.value.pairingBusy) return
         connectJob?.cancel()
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    phase = LocalAdbPhase.PAIRING,
-                    pairingPort = null,
-                    pairingCode = "",
-                    pairingBusy = false,
-                    errorKind = null,
-                    detail = null,
-                )
-            }
-            try {
-                environment.startPairingNotification()
-            } catch (error: Exception) {
-                environment.log("no se pudo mostrar la notificación de vinculación: ${error.message}")
-            }
-            try {
-                val port = environment.discoverPairingPort()
-                _state.update {
-                    it.copy(phase = LocalAdbPhase.WAITING_PAIRING_CODE, pairingPort = port)
-                }
-            } catch (error: Exception) {
+        pairingJob?.cancel()
+        pairingJob =
+            viewModelScope.launch {
                 _state.update {
                     it.copy(
-                        phase = LocalAdbPhase.ERROR,
-                        errorKind = (error as? LocalAdbException)?.kind ?: LocalAdbErrorKind.PAIRING_FAILED,
-                        detail = error.message,
+                        phase = LocalAdbPhase.PAIRING,
+                        pairingPort = null,
+                        pairingCode = "",
+                        pairingBusy = false,
+                        errorKind = null,
+                        detail = null,
                     )
                 }
+                try {
+                    environment.startPairingNotification()
+                } catch (error: Exception) {
+                    environment.log("no se pudo mostrar la notificación de vinculación: ${error.message}")
+                }
+                try {
+                    val port = environment.discoverPairingPort()
+                    _state.update {
+                        if (it.phase == LocalAdbPhase.PAIRING) {
+                            it.copy(phase = LocalAdbPhase.WAITING_PAIRING_CODE, pairingPort = port)
+                        } else {
+                            it
+                        }
+                    }
+                } catch (error: Exception) {
+                    _state.update {
+                        if (it.phase != LocalAdbPhase.PAIRING) {
+                            it
+                        } else {
+                            it.copy(
+                                phase = LocalAdbPhase.ERROR,
+                                errorKind = (error as? LocalAdbException)?.kind ?: LocalAdbErrorKind.PAIRING_FAILED,
+                                detail = error.message,
+                            )
+                        }
+                    }
+                }
             }
-        }
     }
 
     fun setPairingCode(code: String) {
@@ -317,6 +331,19 @@ class LocalAdbViewModel(
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Al volver de Ajustes (o de la notificación) comprueba si la sesión ya existe.
+     * Da un margen para que el servicio termine de vincular antes de reintentar.
+     */
+    private fun validateAfterPairing() {
+        pairingJob?.cancel()
+        viewModelScope.launch {
+            delay(PAIRING_GRACE_MS)
+            if (_state.value.endpoint != null) return@launch
+            if (environment.isAdbEnabled()) connect() else refresh()
         }
     }
 
@@ -418,6 +445,7 @@ class LocalAdbViewModel(
         private const val WAITING_DELAY_MS = 600L
         private const val MAX_ENTRIES = 30
         private const val PAIRING_CODE_LENGTH = 6
+        private const val PAIRING_GRACE_MS = 700L
 
         fun factory(environment: LocalAdbEnvironment): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
