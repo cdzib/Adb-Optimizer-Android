@@ -18,6 +18,7 @@ class DebloatRepository(
     shell: () -> AdbShell?,
 ) {
     private val packages = PackageStateReader(shell)
+    private val homeGuard = HomeLauncherGuard(shell)
 
     fun available(): Boolean = packages.available()
 
@@ -54,19 +55,30 @@ class DebloatRepository(
         onProgress: (Int, Int, String) -> Unit = { _, _, _ -> },
     ): DebloatRun {
         val before = packages.states()
+        val protected = runCatching { homeGuard.blocked(action, targets) }.getOrDefault(emptySet())
         val changes = mutableListOf<ProfileChange>()
         val failures = mutableListOf<String>()
+        val skipped = mutableListOf<String>()
         var done = 0
         targets.forEach { packageName ->
-            runCatching { packages.execute(action.step, packageName) }
-                .onSuccess {
-                    if (action == DebloatAction.UNINSTALL) journal.recordUninstall(packageName)
-                    changes += ProfileChange(packageName, before[packageName] ?: ProfileAppState.ENABLED, action.targetState)
-                }.onFailure { failures += packageName }
+            if (packageName in protected) {
+                skipped += packageName
+            } else {
+                runCatching { packages.execute(action.step, packageName) }
+                    .onSuccess {
+                        if (action == DebloatAction.UNINSTALL) journal.recordUninstall(packageName)
+                        changes += ProfileChange(packageName, before[packageName] ?: ProfileAppState.ENABLED, action.targetState)
+                    }.onFailure { failures += packageName }
+            }
             done++
             onProgress(done, targets.size, packageName)
         }
-        return DebloatRun(action = action, changes = changes.toList(), failures = failures.toList())
+        return DebloatRun(
+            action = action,
+            changes = changes.toList(),
+            failures = failures.toList(),
+            skipped = skipped.toList(),
+        )
     }
 
     /** Devuelve cada paquete al estado que tenia antes de la tanda. */

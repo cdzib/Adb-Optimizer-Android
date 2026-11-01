@@ -215,10 +215,18 @@ class DebloatViewModel(
                         selection = emptySet(),
                         lastRun = run,
                         message =
-                            if (run.failures.isEmpty()) {
-                                uiText(action.messageResource(), run.count)
-                            } else {
-                                uiText(R.string.debloat_message_partial, run.count, run.failures.size)
+                            when {
+                                run.failures.isEmpty() && run.skipped.isEmpty() -> {
+                                    uiText(action.messageResource(), run.count)
+                                }
+
+                                run.failures.isEmpty() -> {
+                                    uiText(R.string.debloat_message_protected, run.count, run.skipped.size)
+                                }
+
+                                else -> {
+                                    uiText(R.string.debloat_message_partial, run.count, run.failures.size)
+                                }
                             },
                     )
                 }

@@ -105,6 +105,7 @@ private class FakeTvLauncherEnvironment(
 ) : TvLauncherEnvironment {
     var homeLauncherCalls = 0
     var lastSetPackage: String? = null
+    var installedFromUri: String? = null
 
     override fun activeDevice(): DeviceInfo? = activeDeviceInfo
 
@@ -119,6 +120,14 @@ private class FakeTvLauncherEnvironment(
     override suspend fun setHomeLauncher(packageName: String): RemoteLauncher {
         lastSetPackage = packageName
         return newCurrent ?: error("No hay launcher nuevo")
+    }
+
+    override suspend fun installLauncherApk(
+        uri: android.net.Uri,
+        onProgress: (String) -> Unit,
+    ): String {
+        installedFromUri = uri.toString()
+        return launchers.first().packageName
     }
 }
 

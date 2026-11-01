@@ -2,6 +2,9 @@
 
 package com.optimizer.tools.feature.tvlauncher
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +35,47 @@ import com.optimizer.tools.app.tv.LocalTelevisionUi
 import com.optimizer.tools.core.ui.resolve
 
 @Composable
+private fun InstallLauncherCard(
+    state: TvLauncherState,
+    onPick: () -> Unit,
+) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.tv_launcher_install_title), style = MaterialTheme.typography.titleSmall)
+            Text(
+                stringResource(R.string.tv_launcher_install_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(onClick = onPick, enabled = !state.installing) {
+                    Text(stringResource(R.string.tv_launcher_install_pick))
+                }
+                if (state.installing) {
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                }
+            }
+            state.installProgress?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+            }
+            state.installMessage?.let {
+                Text(
+                    it.resolve(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 internal fun TvLauncherScreen(
     state: TvLauncherState,
     onBack: () -> Unit,
@@ -39,7 +83,12 @@ internal fun TvLauncherScreen(
     onSelect: (String) -> Unit,
     onConfirmChange: () -> Unit,
     onDismissChange: () -> Unit,
+    onInstall: (Uri) -> Unit,
 ) {
+    val apkPicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) onInstall(uri)
+        }
     val selectedLauncher = state.launchers.firstOrNull { it.packageName == state.pending }
     Column(
         Modifier.fillMaxSize().padding(horizontal = 20.dp),
@@ -58,6 +107,10 @@ internal fun TvLauncherScreen(
             stringResource(R.string.tv_launcher_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        InstallLauncherCard(
+            state = state,
+            onPick = { apkPicker.launch(arrayOf("application/vnd.android.package-archive")) },
         )
         when {
             state.loading -> {

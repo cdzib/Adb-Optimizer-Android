@@ -73,6 +73,8 @@ object AppSafety {
             "com.google.android.permissioncontroller",
             "com.samsung.android.packageinstaller",
             "com.sec.android.app.launcher",
+            // Launcher propio de TV: si se congela, la TV se queda sin pantalla de inicio.
+            "com.tv.launcher.custom",
         )
 
     fun isCritical(packageName: String): Boolean =

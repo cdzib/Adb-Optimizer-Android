@@ -776,6 +776,13 @@ private fun LastRunCard(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+            if (run.skipped.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.debloat_last_run_protected, run.skipped.size),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
             TextButton(onClick = onUndo, enabled = enabled) { Text(stringResource(R.string.debloat_undo)) }
         }
     }

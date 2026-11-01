@@ -85,6 +85,8 @@ data class DebloatRun(
     val action: DebloatAction,
     val changes: List<ProfileChange> = emptyList(),
     val failures: List<String> = emptyList(),
+    /** Paquetes que no se tocaron para no dejar el equipo sin pantalla de inicio. */
+    val skipped: List<String> = emptyList(),
 ) {
     val count: Int get() = changes.size
 }

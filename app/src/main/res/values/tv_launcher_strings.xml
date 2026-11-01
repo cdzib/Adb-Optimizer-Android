@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tv_launcher_title">Launcher de TV</string>
-    <string name="tv_launcher_intro">Para Android TV y Google TV: instala el APK con el instalador normal y elige aquí un launcher compatible como Home. Algunos fabricantes bloquean cambiar la pantalla de inicio. dadb corre como uid 2000: puede instalar APKs y cambiar Home si el sistema lo permite, pero no puede ejecutar adb root ni escribir en /system.</string>
+    <string name="tv_launcher_intro">Para Android TV y Google TV. Orden recomendado: instala el APK del launcher, ponlo como pantalla de inicio y solo después aplica el debloat. El debloater nunca apaga el launcher activo; si una lista dejaría la TV sin Home, conserva uno. Algunos fabricantes bloquean cambiar la pantalla de inicio: dadb corre como uid 2000 y no puede ejecutar adb root ni escribir en /system.</string>
     <string name="tv_launcher_empty">No se encontraron actividades de inicio compatibles en esta TV.</string>
     <string name="tv_launcher_in_use">En uso</string>
     <string name="tv_launcher_available">Instalado y disponible</string>
@@ -13,4 +13,9 @@
     <string name="tv_launcher_set">Establecer</string>
     <string name="tv_launcher_error_load">No se pudieron consultar los launchers de la TV.</string>
     <string name="tv_launcher_error_change">No se pudo cambiar el launcher de la TV.</string>
+    <string name="tv_launcher_install_title">Instalar launcher en la TV</string>
+    <string name="tv_launcher_install_body">Elige el APK del launcher (por ejemplo com.tv.launcher.custom). Se instala en la TV activa y aparecerá en la lista de abajo para establecerlo como Home.</string>
+    <string name="tv_launcher_install_pick">Elegir APK</string>
+    <string name="tv_launcher_installed">Instalado %1$s. Ya puedes establecerlo como pantalla de inicio.</string>
+    <string name="tv_launcher_error_install">No se pudo instalar el APK en la TV.</string>
 </resources>

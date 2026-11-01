@@ -377,6 +377,7 @@ internal fun AppNavGraph(
                 onSelect = tvLauncherViewModel::requestChange,
                 onConfirmChange = tvLauncherViewModel::confirmChange,
                 onDismissChange = tvLauncherViewModel::dismissChange,
+                onInstall = tvLauncherViewModel::install,
             )
         }
 

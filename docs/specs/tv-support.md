@@ -28,6 +28,12 @@ Lo que ya existe y funciona: conexión clásica `ip:5555` (`connectManual`, `sec
 vinculación TLS por QR y código, teclas DPAD/media en `RemoteKey`, filtro `appliesTo.isTv` en
 `Compatibility`, pantalla de launcher de TV y degradación de métricas sin batería ni sensores.
 
+Integración con el launcher propio (`com.tv.launcher.custom`): se instala el APK desde la
+pantalla **Launcher de TV**, se establece como Home con verificación (`RemoteLauncherRepository`)
+y el debloater lo trata como intocable. `HomeLauncherGuard` consulta los `HOME` claimants antes
+de aplicar una tanda y conserva un launcher si la lista dejaría la TV sin pantalla de inicio
+(ignora `setupwraith`, ajustes de TV, `FallbackHome` y apps de test de fábrica).
+
 ## Alcance
 
 Dentro:

@@ -1,5 +1,6 @@
 package com.optimizer.tools.feature.tvlauncher
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -22,6 +23,9 @@ data class TvLauncherState(
     val updating: String? = null,
     val pending: String? = null,
     val error: UiText? = null,
+    val installing: Boolean = false,
+    val installProgress: String? = null,
+    val installMessage: UiText? = null,
 )
 
 class TvLauncherViewModel(
@@ -62,6 +66,39 @@ class TvLauncherViewModel(
 
     fun dismissChange() {
         _state.update { it.copy(pending = null) }
+    }
+
+    /** Instala el APK del launcher en la TV y refresca la lista de Home. */
+    fun install(uri: Uri) {
+        if (_state.value.installing) return
+        if (environment.activeDevice()?.isTv != true) return
+        viewModelScope.launch {
+            _state.update {
+                it.copy(installing = true, installProgress = null, installMessage = null, error = null)
+            }
+            try {
+                val packageName =
+                    environment.installLauncherApk(uri) { progress ->
+                        _state.update { it.copy(installProgress = progress) }
+                    }
+                _state.update {
+                    it.copy(
+                        installing = false,
+                        installProgress = null,
+                        installMessage = uiText(R.string.tv_launcher_installed, packageName),
+                    )
+                }
+                refresh()
+            } catch (error: Exception) {
+                _state.update {
+                    it.copy(
+                        installing = false,
+                        installProgress = null,
+                        error = error.message?.asUiText() ?: uiText(R.string.tv_launcher_error_install),
+                    )
+                }
+            }
+        }
     }
 
     fun confirmChange() {
