@@ -15,14 +15,12 @@ Medido sobre el emulador `sdk_google_atv64_arm64` (Android TV, SDK 36):
 | `dumpsys sensorservice` | `No Sensors on the device` |
 | `dumpsys battery` | sin `level`; solo estado de alimentación |
 
-La detección actual (`core/adb/.../AdbParsers.kt`, `parseDeviceInfo`) usa solo
-`characteristics.contains("tv")`, así que **esta TV se clasifica como teléfono**. Las
-consecuencias observables son: recetas de TV ocultas, botón de launchers de TV ausente y
-espejo tratado como teléfono.
-
-`readInfo` ya ejecuta `pm list features` (línea siguiente a `parseDeviceInfo`), por lo que la
-señal correcta está disponible sin comandos nuevos. Es un defecto de uso de datos, no de
-transporte.
+Corregido: `AdbParsers.isTvDevice` combina `ro.build.characteristics` con
+`pm list features` (`android.software.leanback`, `android.software.leanback_only`,
+`android.hardware.type.television`), así que el emulador de TV y los equipos que no
+anuncian `tv` en las características ya se clasifican bien. `readInfo` lee las features
+antes de construir el `DeviceInfo` y las pasa al parser. Hay tests con la salida real del
+emulador y con un teléfono.
 
 Lo que ya existe y funciona: conexión clásica `ip:5555` (`connectManual`, `secure = false`),
 vinculación TLS por QR y código, teclas DPAD/media en `RemoteKey`, filtro `appliesTo.isTv` en

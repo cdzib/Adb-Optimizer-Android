@@ -56,6 +56,10 @@ data class BatteryParsed(
  * validados por shared/conformance/cases.
  */
 object AdbParsers {
+    private const val FEATURE_LEANBACK = "android.software.leanback"
+    private const val FEATURE_LEANBACK_ONLY = "android.software.leanback_only"
+    private const val FEATURE_TELEVISION = "android.hardware.type.television"
+
     private val GETPROP = Regex("""\[([^]]+)]:\s*\[([^]]*)]""")
     private val TOTAL_RAM = Regex("""Total RAM:\s*([\d,]+)K""", RegexOption.IGNORE_CASE)
     private val FREE_RAM = Regex("""Free RAM:\s*([\d,]+)K\s*\(([^)]*)\)""", RegexOption.IGNORE_CASE)
@@ -163,6 +167,7 @@ object AdbParsers {
         serial: String,
         getprop: String,
         hasRoot: Boolean,
+        features: String = "",
     ): DeviceInfo {
         val props = parseGetprop(getprop)
         val characteristics = props["ro.build.characteristics"].orEmpty()
@@ -172,10 +177,26 @@ object AdbParsers {
             manufacturer = props["ro.product.manufacturer"] ?: "unknown",
             sdk = props["ro.build.version.sdk"]?.toIntOrNull() ?: 0,
             androidVersion = props["ro.build.version.release"] ?: "?",
-            isTv = characteristics.contains("tv", ignoreCase = true),
+            isTv = isTvDevice(characteristics, features),
             hasRoot = hasRoot,
             abi = props["ro.product.cpu.abi"] ?: "?",
         )
+    }
+
+    /**
+     * Android TV no siempre se anuncia en `ro.build.characteristics`: el emulador de TV
+     * reporta `emulator` y Fire OS depende de la versión. `pm list features` es la señal
+     * que usa el propio sistema (`leanback`, `leanback_only`, `type.television`).
+     */
+    fun isTvDevice(
+        characteristics: String,
+        features: String,
+    ): Boolean {
+        if (characteristics.contains("tv", ignoreCase = true)) return true
+        val normalized = features.lowercase()
+        return normalized.contains(FEATURE_LEANBACK) ||
+            normalized.contains(FEATURE_LEANBACK_ONLY) ||
+            normalized.contains(FEATURE_TELEVISION)
     }
 
     /** Hardware and system facts available through getprop/features, never inferred locally. */
@@ -418,14 +439,15 @@ class DeviceRepository(
 ) {
     suspend fun readInfo(serial: String): DeviceInfo {
         val props = shell.exec("getprop").stdout
+        val features = optional("pm list features") ?: ""
         val rootProbe = runCatching { shell.exec("which su || echo no-su", 5_000).stdout }.getOrDefault("")
         val info =
             AdbParsers.parseDeviceInfo(
                 serial = serial,
                 getprop = props,
                 hasRoot = rootProbe.contains("/su") && !rootProbe.contains("no-su"),
+                features = features,
             )
-        val features = optional("pm list features") ?: ""
         return info.copy(
             hardwareInfo =
                 AdbParsers.parseHardwareInfo(

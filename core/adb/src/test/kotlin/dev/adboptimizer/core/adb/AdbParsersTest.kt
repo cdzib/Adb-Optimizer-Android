@@ -7,6 +7,7 @@ import dev.adboptimizer.core.shell.AdbShell
 import dev.adboptimizer.core.shell.ShellResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -237,4 +238,76 @@ class AdbParsersTest {
             assertTrue(info.sensors.isEmpty())
             assertTrue(info.networkInterfaces.isEmpty())
         }
+}
+
+class TvDetectionTest {
+    @Test
+    fun `detecta el emulador de TV por leanback aunque characteristics sea emulator`() {
+        val info =
+            AdbParsers.parseDeviceInfo(
+                serial = "emulator-5554",
+                getprop =
+                    """
+                    [ro.build.characteristics]: [emulator]
+                    [ro.product.model]: [sdk_google_atv64_arm64]
+                    [ro.product.manufacturer]: [Google]
+                    [ro.build.version.sdk]: [36]
+                    [ro.build.version.release]: [16]
+                    [ro.product.cpu.abi]: [arm64-v8a]
+                    """.trimIndent(),
+                hasRoot = false,
+                features =
+                    """
+                    feature:android.software.leanback
+                    feature:android.software.leanback_only
+                    feature:android.hardware.type.television
+                    """.trimIndent(),
+            )
+
+        assertTrue(info.isTv)
+        assertEquals("sdk_google_atv64_arm64", info.model)
+    }
+
+    @Test
+    fun `un telefono sin features de television no se marca como TV`() {
+        val info =
+            AdbParsers.parseDeviceInfo(
+                serial = "R5CW60KERKD",
+                getprop =
+                    """
+                    [ro.build.characteristics]: [phone]
+                    [ro.product.model]: [SM-S918B]
+                    [ro.build.version.sdk]: [36]
+                    """.trimIndent(),
+                hasRoot = false,
+                features = "feature:android.hardware.touchscreen\nfeature:android.hardware.camera",
+            )
+
+        assertFalse(info.isTv)
+    }
+
+    @Test
+    fun `ro build characteristics con tv basta sin listar features`() {
+        assertTrue(AdbParsers.isTvDevice(characteristics = "tv,default", features = ""))
+    }
+
+    @Test
+    fun `leanback_only tambien cuenta como TV`() {
+        assertTrue(
+            AdbParsers.isTvDevice(
+                characteristics = "",
+                features = "feature:android.software.leanback_only",
+            ),
+        )
+    }
+
+    @Test
+    fun `type television sin leanback cuenta como TV`() {
+        assertTrue(
+            AdbParsers.isTvDevice(
+                characteristics = "default",
+                features = "feature:android.hardware.type.television",
+            ),
+        )
+    }
 }
