@@ -181,6 +181,10 @@ internal fun AppNavGraph(
                 onOpenDashboardDetail = { category ->
                     navController.navigate(DashboardDetailRoute(category.name)) { launchSingleTop = true }
                 },
+                onOpenLocalAdb = { navController.navigate(LocalAdbRoute) { launchSingleTop = true } },
+                onOpenAddDevice = { navController.navigate(AddDeviceRoute) { launchSingleTop = true } },
+                onOpenDebloat = { navController.navigate(DebloatRoute) { launchSingleTop = true } },
+                onOpenLogcat = { navController.navigate(LogcatRoute) { launchSingleTop = true } },
             )
         }
 

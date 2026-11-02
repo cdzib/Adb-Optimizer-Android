@@ -22,17 +22,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.ScreenShare
-import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,9 +46,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.optimizer.tools.R
 import com.optimizer.tools.app.tv.LocalTelevisionUi
-import com.optimizer.tools.app.tv.TvActionRow
+import com.optimizer.tools.app.tv.TvScreenHeader
 import com.optimizer.tools.app.tv.TvSectionLabel
 import com.optimizer.tools.app.tv.TvStatCard
 import com.optimizer.tools.app.tv.TvTile
@@ -100,6 +104,10 @@ internal fun DashboardScreen(
     onOpenTools: (() -> Unit)? = null,
     onOpenProfiles: (() -> Unit)? = null,
     onOpenPowerOptions: () -> Unit = {},
+    onOpenLocalAdb: () -> Unit = {},
+    onOpenAddDevice: () -> Unit = {},
+    onOpenDebloat: () -> Unit = {},
+    onOpenLogcat: () -> Unit = {},
 ) {
     val device = state.device.takeIf { state.target == target }
     val metrics = state.metrics.takeIf { state.target == target }
@@ -125,6 +133,10 @@ internal fun DashboardScreen(
             onOpenDashboardDetail,
             onOpenTools,
             localAdbReady = localAdbReady,
+            onOpenLocalAdb = onOpenLocalAdb,
+            onOpenAddDevice = onOpenAddDevice,
+            onOpenDebloat = onOpenDebloat,
+            onOpenLogcat = onOpenLogcat,
         )
         return
     }
@@ -298,93 +310,113 @@ private fun TelevisionDashboardContent(
     onOpenTools: (() -> Unit)?,
     onOpenProfiles: (() -> Unit)? = null,
     localAdbReady: Boolean = false,
+    onOpenLocalAdb: () -> Unit = {},
+    onOpenAddDevice: () -> Unit = {},
+    onOpenDebloat: () -> Unit = {},
+    onOpenLogcat: () -> Unit = {},
 ) {
+    var accessDialog by rememberSaveable { mutableStateOf(false) }
+
     val device = state.device.takeIf { state.target == target }
     val metrics = state.metrics.takeIf { state.target == target }
     val unavailable = stringResource(R.string.dashboard_unavailable)
     val canOptimize = device != null && (target == AppTarget.REMOTE || shizukuStatus == ShizukuLocalStatus.READY || localAdbReady)
+    val subtitle =
+        if (device == null) {
+            stringResource(
+                if (target == AppTarget.LOCAL) R.string.dashboard_local_loading else R.string.dashboard_remote_empty,
+            )
+        } else {
+            "TV · conectado"
+        }
+    val infoLine =
+        buildList {
+            device?.let { add("Android ${it.androidVersion}") }
+            metrics?.takeIf { it.totalRamKb > 0 }?.let {
+                add("${formatKb(it.usedRamKb)} / ${formatKb(it.totalRamKb)} RAM")
+            }
+        }.joinToString(" · ")
+
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        TvScreenHeader(
+            title = stringResource(R.string.nav_home),
+            subtitle = subtitle,
+            actions = {
+                if (target == AppTarget.LOCAL && shizukuStatus != ShizukuLocalStatus.READY) {
+                    OutlinedButton(onClick = { accessDialog = true }) {
+                        Text("Permitir acceso")
+                    }
+                }
+                if (state.loading) {
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    IconButton(onClick = onRefresh) {
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.dashboard_refresh))
+                    }
+                }
+            },
+        )
+
         // Hero del equipo, como en la maqueta de TV.
-        Column(
+        Row(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            Box(
+                Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        if (device?.isTv == true) "TV" else "AD",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        device?.displayName
-                            ?: stringResource(
-                                if (target == AppTarget.LOCAL) {
-                                    R.string.dashboard_local_loading
-                                } else {
-                                    R.string.dashboard_remote_empty
-                                },
-                            ),
-                        style = MaterialTheme.typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        device?.let {
-                            stringResource(R.string.dashboard_android_line, it.androidVersion, it.sdk, it.abi, "")
-                                .trim()
-                        } ?: stringResource(
-                            if (target == AppTarget.LOCAL) {
-                                R.string.dashboard_local_loading_body
-                            } else {
-                                R.string.dashboard_remote_empty_body
-                            },
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                Text(
+                    if (device?.isTv == true) "TV" else "AD",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
-            TvActionRow(
-                primaryLabel = t("nav.optimize"),
-                primaryEnabled = canOptimize && !state.loading,
-                onPrimary = onOptimize,
-                secondaryLabel = stringResource(R.string.tools_title),
-                onSecondary = onOpenTools,
-            )
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    device?.displayName
+                        ?: stringResource(
+                            if (target == AppTarget.LOCAL) R.string.dashboard_local_loading else R.string.dashboard_remote_empty,
+                        ),
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    infoLine.ifBlank {
+                        stringResource(
+                            if (target == AppTarget.LOCAL) R.string.dashboard_local_loading_body else R.string.dashboard_remote_empty_body,
+                        )
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            OutlinedButton(onClick = onOptimize, enabled = canOptimize) {
+                Icon(Icons.Filled.Bolt, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text(t("nav.optimize"))
+            }
         }
 
-        state.error?.let { Text(it.resolve(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
-        state.powerMessage?.let { Text(it.resolve(), style = MaterialTheme.typography.bodySmall) }
+        state.error?.let {
+            Text(it.resolve(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TvStatCard(
-                label = stringResource(R.string.dashboard_cpu),
-                value = metrics?.let { "${it.cpuBusyPercent.toInt()}%" } ?: unavailable,
-                hint = metrics?.let { "Carga ${"%.2f".format(it.load1)}" },
-                modifier = Modifier.weight(1f),
-            )
             TvStatCard(
                 label = stringResource(R.string.dashboard_ram_used),
                 value = metrics?.takeIf { it.totalRamKb > 0 }?.let { "${(it.ramRatio * 100).toInt()}%" } ?: unavailable,
@@ -397,113 +429,90 @@ private fun TelevisionDashboardContent(
                 hint = metrics?.takeIf { it.storageAvailableKb > 0 }?.let { formatKb(it.storageAvailableKb) },
                 modifier = Modifier.weight(1f),
             )
+            TvStatCard(
+                label = stringResource(R.string.dashboard_cpu),
+                value = metrics?.let { "${it.cpuBusyPercent.toInt()}%" } ?: unavailable,
+                hint = metrics?.let { "Carga ${"%.2f".format(it.load1)}" },
+                modifier = Modifier.weight(1f),
+            )
         }
 
         TvSectionLabel(stringResource(R.string.dashboard_quick_access))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             TvTile(
                 icon = Icons.Filled.Bolt,
-                title = t("nav.optimize"),
-                subtitle = stringResource(R.string.tv_dashboard_recipes),
+                title = "Optimizar",
+                subtitle = "3 recetas",
                 onClick = onOptimize,
                 enabled = canOptimize,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).heightIn(min = 68.dp),
             )
             TvTile(
-                icon = Icons.Filled.Tune,
-                title = stringResource(R.string.tools_title),
-                subtitle = stringResource(R.string.tv_dashboard_tools_subtitle),
-                onClick = onOpenTools,
-                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.Delete,
+                title = "Debloater",
+                subtitle = "3 sugeridas",
+                onClick = onOpenDebloat,
+                modifier = Modifier.weight(1f).heightIn(min = 68.dp),
             )
             TvTile(
                 icon = Icons.Filled.Layers,
-                title = stringResource(R.string.profiles_title),
-                subtitle = stringResource(R.string.tv_dashboard_profiles_subtitle),
+                title = "Perfiles",
+                subtitle = "3 conjuntos",
                 onClick = onOpenProfiles,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).heightIn(min = 68.dp),
+            )
+            TvTile(
+                icon = Icons.AutoMirrored.Filled.List,
+                title = "Registro",
+                subtitle = "En vivo",
+                onClick = onOpenLogcat,
+                modifier = Modifier.weight(1f).heightIn(min = 68.dp),
             )
         }
 
-        if (target == AppTarget.REMOTE && device != null) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TvTile(
-                    icon = Icons.AutoMirrored.Filled.ScreenShare,
-                    title = stringResource(R.string.dashboard_mirror_title),
-                    subtitle = stringResource(R.string.tv_dashboard_mirror_subtitle),
-                    onClick = onOpenRemote,
-                    modifier = Modifier.weight(1f),
-                )
-                if (device.isTv) {
-                    TvTile(
-                        icon = Icons.Filled.Tv,
-                        title = stringResource(R.string.dashboard_tv_launchers),
-                        subtitle = stringResource(R.string.tv_dashboard_launchers_subtitle),
-                        onClick = onOpenTvLauncher,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                TvTile(
-                    icon = Icons.Filled.Apps,
-                    title = stringResource(R.string.dashboard_manage_apps),
-                    subtitle = stringResource(R.string.tv_dashboard_apps_subtitle),
-                    onClick = onOpenApps,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        } else if (target == AppTarget.LOCAL && shizukuStatus != ShizukuLocalStatus.READY) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TvTile(
-                    icon = Icons.Filled.Shield,
-                    title = stringResource(R.string.dashboard_shizuku_permission_title),
-                    subtitle = stringResource(R.string.tv_dashboard_shizuku_subtitle),
-                    onClick = onRequestShizuku,
-                    modifier = Modifier.weight(1f),
-                )
-                TvTile(
-                    icon = Icons.Filled.Refresh,
-                    title = stringResource(R.string.dashboard_refresh),
-                    subtitle = stringResource(R.string.tv_dashboard_refresh_subtitle),
-                    onClick = onRefreshShizuku,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TvTile(
-                icon = Icons.Filled.Apps,
-                title = stringResource(R.string.dashboard_manage_apps),
-                subtitle = stringResource(R.string.tv_dashboard_apps_subtitle),
-                onClick = onOpenApps,
-                modifier = Modifier.weight(1f),
+        TvSectionLabel("Historial reciente")
+        Text(
+            state.powerMessage?.resolve() ?: "Sin cambios recientes",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        if (accessDialog) {
+            AlertDialog(
+                onDismissRequest = { accessDialog = false },
+                title = { Text("Permitir acceso al televisor") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Para aplicar cambios, la app necesita ADB o Shizuku autorizados. Elige un método.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        OutlinedButton(
+                            onClick = {
+                                accessDialog = false
+                                onRequestShizuku()
+                            },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        ) { Text("Shizuku · solicitar permiso") }
+                        OutlinedButton(
+                            onClick = {
+                                accessDialog = false
+                                onOpenLocalAdb()
+                            },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        ) { Text("ADB local · configurar") }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { accessDialog = false }) { Text("Cancelar") }
+                },
             )
-            TvTile(
-                icon = Icons.Filled.Refresh,
-                title = stringResource(R.string.tv_dashboard_refresh_title),
-                subtitle = stringResource(R.string.tv_dashboard_refresh_subtitle),
-                onClick = onRefresh,
-                enabled = !state.loading,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        if (device != null) {
-            TvSectionLabel(stringResource(R.string.dashboard_explore))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                DashboardCategory.entries.take(3).forEach { category ->
-                    TvTile(
-                        icon = category.icon,
-                        title = stringResource(category.label),
-                        subtitle = stringResource(category.hint),
-                        onClick = { onOpenDetail(category) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
         }
     }
 }
 
-@Preview(widthDp = 608, heightDp = 400, showBackground = true)
+@Preview(widthDp = 1024, heightDp = 576, showBackground = true)
 @Composable
 private fun TelevisionDashboardContentPreview() {
     AdbOptimizerTheme {

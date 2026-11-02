@@ -45,6 +45,7 @@ import com.optimizer.tools.app.tv.isTelevisionHost
 import com.optimizer.tools.core.ui.AdbOptimizerTheme
 import com.optimizer.tools.data.AppContainer
 import com.optimizer.tools.data.ShizukuLocalAccess
+import com.optimizer.tools.domain.model.ThemeMode
 import com.optimizer.tools.feature.apps.AppsViewModel
 import com.optimizer.tools.feature.connection.ConnectionViewModel
 import com.optimizer.tools.feature.console.ConsoleViewModel
@@ -169,8 +170,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            AdbOptimizerTheme(themeMode = settings.themeMode) {
-                CompositionLocalProvider(LocalTelevisionUi provides isTelevisionHost(this@MainActivity)) {
+            val televisionHost = isTelevisionHost(this@MainActivity)
+            // La maqueta de TV es oscura: en el televisor no seguimos el tema del sistema.
+            AdbOptimizerTheme(themeMode = if (televisionHost) ThemeMode.DARK else settings.themeMode) {
+                CompositionLocalProvider(LocalTelevisionUi provides televisionHost) {
                     OptimizerApp(
                         viewModel = viewModel,
                         settingsViewModel = settingsViewModel,

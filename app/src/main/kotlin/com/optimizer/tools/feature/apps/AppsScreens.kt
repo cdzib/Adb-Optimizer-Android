@@ -137,6 +137,7 @@ internal fun AppsScreen(
                 onReload = onReload,
                 onAction = onOpen,
                 onInspect = onInspect,
+                onFilter = onFilter,
             )
         } else {
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
