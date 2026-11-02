@@ -32,6 +32,18 @@ y el debloater lo trata como intocable. `HomeLauncherGuard` consulta los `HOME` 
 de aplicar una tanda y conserva un launcher si la lista dejaría la TV sin pantalla de inicio
 (ignora `setupwraith`, ajustes de TV, `FallbackHome` y apps de test de fábrica).
 
+Reglas de seguridad de TV portadas de los casos de CleanYourTV:
+
+- `AppSafety` protege el núcleo que puede impedir el arranque: `com.android.tv.settings`,
+  `com.android.location.fused`, `com.android.sdksandbox`, `com.cltv.mal`,
+  `com.mediatek.tis/tv.service/tv.agent`, overlays de mainline y `com.android.providers.*`
+  (salvo calendario, contactos, diccionario y blockednumber).
+- `TvSafetyGuard` salta los paquetes que sirven `android.media.tv.TvInputService` (capa de
+  HDMI/AV) y `com.google.android.tungsten.setupwraith` cuando la red Wi-Fi guardada es suya
+  (`dumpsys wifi` → `cname=`), porque deshabilitarlo borra esa red y deja la TV sin ADB.
+- Inicio muestra «Depuración de red: abierta» cuando `ro.adb.secure=0`, para avisar de que
+  cualquiera en la red puede abrir shell sin autorización.
+
 ## Alcance
 
 Dentro:

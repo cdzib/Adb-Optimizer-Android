@@ -225,6 +225,8 @@ data class DeviceInfo(
     val displayInfo: DeviceDisplayInfo? = null,
     val sensors: List<DeviceSensorInfo> = emptyList(),
     val networkInterfaces: List<DeviceNetworkInterface> = emptyList(),
+    /** `ro.adb.secure=0`: adbd acepta conexiones de red sin autorización del usuario. */
+    val adbInsecure: Boolean = false,
 ) {
     val displayName: String get() = "$manufacturer $model".trim()
 }

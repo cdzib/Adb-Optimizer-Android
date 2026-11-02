@@ -19,6 +19,7 @@ class DebloatRepository(
 ) {
     private val packages = PackageStateReader(shell)
     private val homeGuard = HomeLauncherGuard(shell)
+    private val tvGuard = TvSafetyGuard(shell)
 
     fun available(): Boolean = packages.available()
 
@@ -55,7 +56,7 @@ class DebloatRepository(
         onProgress: (Int, Int, String) -> Unit = { _, _, _ -> },
     ): DebloatRun {
         val before = packages.states()
-        val protected = runCatching { homeGuard.blocked(action, targets) }.getOrDefault(emptySet())
+        val protected = protectTargets(action, targets)
         val changes = mutableListOf<ProfileChange>()
         val failures = mutableListOf<String>()
         val skipped = mutableListOf<String>()
@@ -94,6 +95,20 @@ class DebloatRepository(
             }
         }
         return restored
+    }
+
+    /**
+     * Reglas que pueden vetar un paquete antes de tocarlo: Home, entradas de TV y la red
+     * Wi-Fi de `setupwraith`. Un fallo de consulta no debe romper la tanda.
+     */
+    private suspend fun protectTargets(
+        action: DebloatAction,
+        targets: List<String>,
+    ): Set<String> {
+        if (action != DebloatAction.FREEZE && action != DebloatAction.UNINSTALL) return emptySet()
+        return runCatching {
+            homeGuard.blocked(action, targets) + tvGuard.blocked(targets)
+        }.getOrDefault(emptySet())
     }
 
     /** Vuelve a habilitar o reinstalar los paquetes elegidos, leyendo su estado actual. */

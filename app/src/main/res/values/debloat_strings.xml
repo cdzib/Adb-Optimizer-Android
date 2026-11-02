@@ -17,7 +17,7 @@
     <string name="debloat_message_unfrozen">%1$d apps descongeladas y confirmadas.</string>
     <string name="debloat_message_uninstalled">%1$d apps desinstaladas para este usuario.</string>
     <string name="debloat_message_partial">%1$d cambios aplicados; %2$d apps fallaron.</string>
-    <string name="debloat_message_protected">%1$d cambios aplicados; %2$d apps se dejaron intactas para no quitar la pantalla de inicio.</string>
+    <string name="debloat_message_protected">%1$d cambios aplicados; %2$d apps se dejaron intactas para no dejar el equipo sin pantalla de inicio ni entradas de TV.</string>
     <string name="debloat_message_undone">%1$d apps vueltas a su estado anterior.</string>
     <string name="debloat_message_restored">%1$d apps restauradas y confirmadas.</string>
     <string name="debloat_message_nothing_to_restore">No hay apps congeladas o desinstaladas por el debloater.</string>
@@ -35,7 +35,7 @@
     <string name="debloat_running">%1$d de %2$d</string>
     <string name="debloat_last_run">%1$d cambios en la última tanda</string>
     <string name="debloat_last_run_failures">%1$d apps no se pudieron cambiar.</string>
-    <string name="debloat_last_run_protected">%1$d apps protegidas por ser el launcher de inicio.</string>
+    <string name="debloat_last_run_protected">%1$d apps protegidas (launcher de inicio o entradas de TV).</string>
     <string name="debloat_undo">Deshacer la última tanda</string>
     <string name="debloat_confirm_body">Se aplicará el cambio a %1$d apps seleccionadas.</string>
     <string name="debloat_confirm_freeze_warning">Congelar deshabilita la app para este usuario: deja de abrirse hasta que la descongeles. Es reversible.</string>

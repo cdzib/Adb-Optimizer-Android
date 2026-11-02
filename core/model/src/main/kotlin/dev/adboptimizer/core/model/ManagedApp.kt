@@ -66,6 +66,7 @@ object AppSafety {
             "android",
             "com.android.systemui",
             "com.android.settings",
+            "com.android.tv.settings",
             "com.android.shell",
             "com.android.packageinstaller",
             "com.google.android.packageinstaller",
@@ -75,10 +76,43 @@ object AppSafety {
             "com.sec.android.app.launcher",
             // Launcher propio de TV: si se congela, la TV se queda sin pantalla de inicio.
             "com.tv.launcher.custom",
+            // Núcleo de Android/MediaTek cuya desactivación deja el equipo sin arrancar.
+            "com.android.sdksandbox",
+            "com.android.location.fused",
+            "com.android.modulemetadata",
+            "com.android.ext.services",
+            "com.android.ext.shared",
+            "android.ext.services",
+            "android.ext.shared",
+            "com.google.android.ext.services",
+            "com.google.android.ext.shared",
+            "com.google.android.modulemetadata",
+            "com.cltv.mal",
+            "com.mediatek.tis",
+            "com.mediatek.tv.service",
+            "com.mediatek.tv.agent",
         )
+
+    /** Proveedores del sistema que sí se pueden desactivar sin romper el arranque. */
+    private val disposableProviders =
+        setOf(
+            "com.android.providers.calendar",
+            "com.android.providers.contacts",
+            "com.android.providers.userdictionary",
+            "com.android.providers.blockednumber",
+        )
+
+    /** Overlays de mainline: sin ellos el framework puede quedar inconsistente. */
+    private const val MODULE_OVERLAY_PREFIX = "com.google.android.overlay.modules."
+    private const val SYSTEM_PROVIDER_PREFIX = "com.android.providers."
 
     fun isCritical(packageName: String): Boolean =
         packageName in criticalPackages ||
+            packageName.startsWith(MODULE_OVERLAY_PREFIX) ||
+            (
+                packageName.startsWith(SYSTEM_PROVIDER_PREFIX) &&
+                    packageName !in disposableProviders
+            ) ||
             packageName == "com.optimizer.tools" ||
             packageName == "com.optimizer.tools.debug" ||
             packageName.startsWith("com.optimizer.tools.")

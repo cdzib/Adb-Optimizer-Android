@@ -345,6 +345,12 @@ internal fun DashboardCategoryContent(
                             add(R.string.dashboard_sdk to device.sdk.toString())
                             add(R.string.dashboard_abi to device.abi.ifBlank { unavailable })
                             add(R.string.dashboard_access to stringResource(accessLabel(device, target, shizukuStatus)))
+                            if (device.adbInsecure) {
+                                add(
+                                    R.string.dashboard_network_debugging to
+                                        stringResource(R.string.dashboard_network_debugging_insecure),
+                                )
+                            }
                             add(
                                 R.string.dashboard_uptime to
                                     (metrics?.let { formatUptime(it.uptimeSeconds) } ?: unavailable),
@@ -379,6 +385,12 @@ internal fun DashboardCategoryContent(
                             add(R.string.dashboard_android to device.androidVersion.ifBlank { unavailable })
                             add(R.string.dashboard_sdk to device.sdk.toString())
                             add(R.string.dashboard_access to stringResource(accessLabel(device, target, shizukuStatus)))
+                            if (device.adbInsecure) {
+                                add(
+                                    R.string.dashboard_network_debugging to
+                                        stringResource(R.string.dashboard_network_debugging_insecure),
+                                )
+                            }
                             add(
                                 R.string.dashboard_uptime to
                                     (metrics?.let { formatUptime(it.uptimeSeconds) } ?: unavailable),

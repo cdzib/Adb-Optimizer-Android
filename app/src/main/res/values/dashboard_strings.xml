@@ -30,6 +30,8 @@
     <string name="dashboard_android">Android</string>
     <string name="dashboard_sdk">Versión SDK</string>
     <string name="dashboard_access">Acceso</string>
+    <string name="dashboard_network_debugging">Depuración de red</string>
+    <string name="dashboard_network_debugging_insecure">Abierta (sin autorización)</string>
     <string name="dashboard_root">Root disponible</string>
     <string name="dashboard_shizuku">Shizuku autorizado</string>
     <string name="dashboard_basic">Acceso básico</string>

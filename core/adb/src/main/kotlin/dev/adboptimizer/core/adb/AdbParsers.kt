@@ -448,7 +448,9 @@ class DeviceRepository(
                 hasRoot = rootProbe.contains("/su") && !rootProbe.contains("no-su"),
                 features = features,
             )
+        val adbSecure = AdbParsers.parseGetprop(props)["ro.adb.secure"]
         return info.copy(
+            adbInsecure = adbSecure == "0",
             hardwareInfo =
                 AdbParsers.parseHardwareInfo(
                     getprop = props,
