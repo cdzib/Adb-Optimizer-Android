@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "source": "CleanYourTV (MIT) · https://github.com/Gathin23/cleanyourtv · listas de punto de partida",
+  "models": [
+    {
+      "brand": "Xiaomi",
+      "model": "MiTV-MOOQ1",
+      "device": "tarzan",
+      "boards": [],
+      "sdk": 30,
+      "notes": "Mi TV 4A (Android TV 10/11, PatchWall). Punto de partida; revisa antes de aplicar.",
+      "bundles": {
+        "telemetry": [
+          "com.miui.tv.analytics",
+          "com.xiaomi.statistic"
+        ],
+        "ads": [
+          "com.xm.webcontent",
+          "com.xiaomi.floatingframe",
+          "com.mitv.tvhome.mitvplus"
+        ],
+        "preload": [
+          "com.xiaomi.mimusic2",
+          "com.google.android.play.games",
+          "com.google.android.feedback",
+          "com.google.android.apps.tachyon",
+          "fusion.android.tv.demo"
+        ]
+      }
+    }
+  ]
+}

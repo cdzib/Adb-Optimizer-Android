@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tv_tuning_title">Puesta a punto de TV</string>
+    <string name="tv_tuning_intro">Ajustes reversibles para dejar la TV más fluida y con menos telemetría. Todo se puede deshacer y nunca se toca el launcher ni el núcleo del sistema.</string>
+    <string name="tv_tuning_preset_recommended">Recomendado</string>
+    <string name="tv_tuning_preset_performance">Rendimiento</string>
+    <string name="tv_tuning_preset_privacy">Privacidad</string>
+    <string name="tv_tuning_preset_custom">Personalizado</string>
+    <string name="tv_tuning_category_performance">Rendimiento</string>
+    <string name="tv_tuning_category_display">Pantalla</string>
+    <string name="tv_tuning_category_privacy">Privacidad</string>
+    <string name="tv_tuning_category_cleanup">Limpieza</string>
+    <string name="tv_tuning_risk_safe">Seguro</string>
+    <string name="tv_tuning_risk_advanced">Avanzado</string>
+
+    <string name="tv_tuning_animations_title">Animaciones más rápidas</string>
+    <string name="tv_tuning_animations_summary">Baja las escalas de animación a 0.5. La interfaz responde antes sin llegar a 0, que rompe menús en algunos firmwares.</string>
+    <string name="tv_tuning_screensaver_title">Salvapantallas desactivado</string>
+    <string name="tv_tuning_screensaver_summary">Evita el modo ambiental y sus descargas en segundo plano; también reduce el riesgo de retención de imagen.</string>
+    <string name="tv_tuning_timeout_title">Apagado de pantalla a 5 minutos</string>
+    <string name="tv_tuning_timeout_summary">Cambia el tiempo de espera de pantalla a 5 minutos, en lugar del valor de fábrica.</string>
+    <string name="tv_tuning_dexopt_title">Optimizar código de apps</string>
+    <string name="tv_tuning_dexopt_summary">Ejecuta la compilación en segundo plano de Android una vez. Puede tardar varios minutos.</string>
+    <string name="tv_tuning_trim_title">Liberar caché</string>
+    <string name="tv_tuning_trim_summary">Recorta las cachés de las apps para recuperar almacenamiento. No borra datos.</string>
+    <string name="tv_tuning_fixed_performance_title">Modo de rendimiento fijo</string>
+    <string name="tv_tuning_fixed_performance_summary">Mantiene la CPU en un perfil alto mientras el equipo está enchufado. Algunos firmwares no lo soportan y sube el consumo.</string>
+    <string name="tv_tuning_dns_title">DNS privado con bloqueo</string>
+    <string name="tv_tuning_dns_summary">Apunta el DNS del sistema a AdGuard DNS para bloquear anuncios y rastreadores en todas las apps. No quita los anuncios de YouTube.</string>
+    <string name="tv_tuning_ad_tracking_title">Limitar seguimiento publicitario</string>
+    <string name="tv_tuning_ad_tracking_summary">Activa el límite de identificador publicitario del sistema. Depende del firmware y de si la app respeta el ajuste.</string>
+    <string name="tv_tuning_background_title">Limitar procesos en segundo plano</string>
+    <string name="tv_tuning_background_summary">Reduce los procesos en caché. Puede romper grabación, picture-in-picture o apps de fondo; solo para TVs con poca RAM.</string>
+
+    <string name="tv_bundle_telemetry">Telemetría del fabricante</string>
+    <string name="tv_bundle_ads">Anuncios y ACR</string>
+    <string name="tv_bundle_preload">Apps precargadas</string>
+
+    <string name="tv_tuning_detected">%1$s · %2$s</string>
+    <string name="tv_tuning_no_model">Sin lista específica para este modelo; se aplican solo ajustes.</string>
+    <string name="tv_tuning_current">Actual: %1$s</string>
+    <string name="tv_tuning_unset">sin valor</string>
+    <string name="tv_tuning_apply">Aplicar %1$d cambios</string>
+    <string name="tv_tuning_applying">%1$d de %2$d</string>
+    <string name="tv_tuning_applied">%1$d ajustes aplicados.</string>
+    <string name="tv_tuning_partial">%1$d aplicados; %2$d fallaron; %3$d protegidos.</string>
+    <string name="tv_tuning_undo">Deshacer</string>
+    <string name="tv_tuning_undone">Cambios revertidos.</string>
+    <string name="tv_tuning_error">No se pudo completar la puesta a punto.</string>
+    <string name="tv_tuning_no_device">Conecta la TV por ADB para ver la puesta a punto.</string>
+    <string name="tv_tuning_not_tv">La puesta a punto solo está disponible para Android TV y Google TV.</string>
+</resources>
