@@ -2,7 +2,7 @@ package com.optimizer.tools.app
 
 import dev.adboptimizer.core.model.AppTarget
 
-enum class Screen { HOME, CONNECT, ADD_DEVICE, TV_LAUNCHER, OPTIMIZE, APPS, HOST_APP_PICKER, SETTINGS, DPC }
+enum class Screen { HOME, CONNECT, ADD_DEVICE, TV_LAUNCHER, TV_TUNING, OPTIMIZE, APPS, HOST_APP_PICKER, SETTINGS, DPC }
 
 /**
  * Claves del rail lateral de TV, en orden. Destino se incluye para conectar otros equipos

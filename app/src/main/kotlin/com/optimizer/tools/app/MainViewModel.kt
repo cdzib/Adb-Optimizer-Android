@@ -131,6 +131,15 @@ class MainViewModel(
         navigateTo(Screen.TV_LAUNCHER)
     }
 
+    fun openTvTuning() {
+        val device = _state.value.connected
+        if (_state.value.activeTarget != AppTarget.REMOTE || device == null || !device.isTv) {
+            fail("error.network", uiText(R.string.app_error_launcher_tv_only))
+            return
+        }
+        navigateTo(Screen.TV_TUNING)
+    }
+
     fun consumeFeedback() {
         _state.update { it.copy(errorKey = null, errorDetail = null, messageKey = null) }
     }

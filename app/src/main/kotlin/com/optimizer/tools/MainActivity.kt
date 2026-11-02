@@ -37,6 +37,7 @@ import com.optimizer.tools.app.AppContainerSettingsEnvironment
 import com.optimizer.tools.app.AppContainerShizukuEnvironment
 import com.optimizer.tools.app.AppContainerTermuxEnvironment
 import com.optimizer.tools.app.AppContainerTvLauncherEnvironment
+import com.optimizer.tools.app.AppContainerTvTuningEnvironment
 import com.optimizer.tools.app.MainViewModel
 import com.optimizer.tools.app.OptimizerApp
 import com.optimizer.tools.app.tv.LocalTelevisionUi
@@ -65,6 +66,7 @@ import com.optimizer.tools.feature.settingsdb.SettingsDbViewModel
 import com.optimizer.tools.feature.shizuku.ShizukuViewModel
 import com.optimizer.tools.feature.termux.presentation.TermuxViewModel
 import com.optimizer.tools.feature.tvlauncher.TvLauncherViewModel
+import com.optimizer.tools.feature.tvtuning.presentation.TvTuningViewModel
 import rikka.shizuku.Shizuku
 
 class MainActivity : ComponentActivity() {
@@ -103,6 +105,10 @@ class MainActivity : ComponentActivity() {
     private val tvLauncherViewModel: TvLauncherViewModel by viewModels {
         TvLauncherViewModel.factory(AppContainerTvLauncherEnvironment(container))
     }
+    private val tvTuningViewModel: TvTuningViewModel by viewModels {
+        TvTuningViewModel.factory(AppContainerTvTuningEnvironment(container))
+    }
+
     private val shizukuViewModel: ShizukuViewModel by viewModels {
         ShizukuViewModel.factory(AppContainerShizukuEnvironment(container))
     }
@@ -174,6 +180,7 @@ class MainActivity : ComponentActivity() {
                         optimizeViewModel = optimizeViewModel,
                         installViewModel = installViewModel,
                         tvLauncherViewModel = tvLauncherViewModel,
+                        tvTuningViewModel = tvTuningViewModel,
                         shizukuViewModel = shizukuViewModel,
                         dpcViewModel = dpcViewModel,
                         remoteControlViewModel = remoteControlViewModel,

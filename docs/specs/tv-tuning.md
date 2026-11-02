@@ -1,7 +1,6 @@
 # Puesta a punto de TV
 
-Estado: fase 1 (catalogo y motor). La pantalla y la ejecucion desde la UI llegan en la
-fase 2.
+Estado: fases 1 y 2 (catalogo, motor y pantalla).
 
 ## Objetivo
 
@@ -43,10 +42,16 @@ Los ajustes avanzados nunca entran en el preset recomendado.
 - `private_dns` no quita anuncios de YouTube y se avisa en el resumen del ajuste.
 - `background_process_limit` es avanzado: puede romper grabacion o PiP.
 
-## Fase 2 (pendiente)
+## Fase 2 (implementada)
 
-- Pantalla con chips de preset, lista de ajustes con valor actual y confirmacion de
-  avanzados.
-- Entrada desde el dashboard TV y desde Optimizar.
-- Boton "Deshacer" conectado a `TvTuningRepository.undo`.
-- Aplicacion de bundles via `DebloatRepository` y resumen de protegidos.
+- Pantalla `TvTuningScreen`: chips de preset, ajustes por categoria con valor actual,
+  badges de riesgo, bundles del modelo y progreso.
+- Entrada desde **Herramientas → Puesta a punto de TV**, visible solo cuando el destino
+  remoto es TV (`dashboardState.device.isTv`).
+- Aplicar ejecuta primero los ajustes seleccionados y despues los bundles con
+  `DebloatRepository` (con `HomeLauncherGuard`, `TvSafetyGuard` y `AppSafety`).
+- Deshacer revierte los ajustes aplicados y los paquetes congelados.
+- El resumen reporta aplicados, fallidos y protegidos.
+
+Limite: la pantalla usa la sesion remota (`AppContainer.device`); en un equipo local no
+hay destino TV todavia.

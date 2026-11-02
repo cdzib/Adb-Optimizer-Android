@@ -31,6 +31,9 @@ data object OptimizeRoute : AppDestination
 data object TvLauncherRoute : AppDestination
 
 @Serializable
+data object TvTuningRoute : AppDestination
+
+@Serializable
 data object SettingsRoute : AppDestination
 
 @Serializable
@@ -101,6 +104,7 @@ fun Screen.toRoute(): AppDestination =
         Screen.HOST_APP_PICKER -> HostAppPickerRoute
         Screen.OPTIMIZE -> OptimizeRoute
         Screen.TV_LAUNCHER -> TvLauncherRoute
+        Screen.TV_TUNING -> TvTuningRoute
         Screen.SETTINGS -> SettingsRoute
         Screen.DPC -> DpcRoute
     }
@@ -120,6 +124,8 @@ fun AppDestination.toScreen(): Screen? =
         OptimizeRoute -> Screen.OPTIMIZE
 
         TvLauncherRoute -> Screen.TV_LAUNCHER
+
+        TvTuningRoute -> Screen.TV_TUNING
 
         SettingsRoute -> Screen.SETTINGS
 
@@ -152,6 +158,7 @@ fun NavDestination.toScreen(): Screen? =
         hasRoute<HostAppPickerRoute>() -> Screen.HOST_APP_PICKER
         hasRoute<OptimizeRoute>() -> Screen.OPTIMIZE
         hasRoute<TvLauncherRoute>() -> Screen.TV_LAUNCHER
+        hasRoute<TvTuningRoute>() -> Screen.TV_TUNING
         hasRoute<SettingsRoute>() -> Screen.SETTINGS
         hasRoute<DpcRoute>() -> Screen.DPC
         else -> null
@@ -167,6 +174,7 @@ fun NavDestination.isPushDestination(): Boolean =
         hasRoute<AddDeviceRoute>() ||
         hasRoute<HostAppPickerRoute>() ||
         hasRoute<TvLauncherRoute>() ||
+        hasRoute<TvTuningRoute>() ||
         hasRoute<RemoteControlRoute>() ||
         hasRoute<LogcatRoute>() ||
         hasRoute<SettingsDbRoute>() ||

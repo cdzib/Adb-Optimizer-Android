@@ -77,6 +77,7 @@ fun ToolsScreen(
     onOpenFiles: () -> Unit,
     onOpenLocalAdb: () -> Unit,
     onOpenTermux: () -> Unit,
+    onOpenTvTuning: (() -> Unit)? = null,
     onOpenDpc: (() -> Unit)? = null,
     targetLabel: String? = null,
 ) {
@@ -172,6 +173,18 @@ fun ToolsScreen(
                     onOpenProfiles,
                 ),
             )
+            if (onOpenTvTuning != null) {
+                add(
+                    ToolEntry(
+                        ToolsGroupId.System,
+                        R.string.tv_tuning_title,
+                        R.string.tv_tuning_intro,
+                        Icons.Default.Tune,
+                        DesignTone.Green,
+                        onOpenTvTuning,
+                    ),
+                )
+            }
             if (onOpenDpc != null) {
                 add(
                     ToolEntry(

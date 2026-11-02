@@ -68,6 +68,8 @@ import com.optimizer.tools.feature.termux.presentation.TermuxViewModel
 import com.optimizer.tools.feature.tools.ToolsScreen
 import com.optimizer.tools.feature.tvlauncher.TvLauncherScreen
 import com.optimizer.tools.feature.tvlauncher.TvLauncherViewModel
+import com.optimizer.tools.feature.tvtuning.presentation.TvTuningScreen
+import com.optimizer.tools.feature.tvtuning.presentation.TvTuningViewModel
 import dev.adboptimizer.core.model.AppTarget
 
 @Composable
@@ -83,6 +85,7 @@ internal fun AppNavGraph(
     optimizeViewModel: OptimizeViewModel,
     installViewModel: InstallViewModel,
     tvLauncherViewModel: TvLauncherViewModel,
+    tvTuningViewModel: TvTuningViewModel,
     shizukuViewModel: ShizukuViewModel,
     dpcViewModel: DpcViewModel,
     remoteControlViewModel: RemoteControlViewModel,
@@ -105,6 +108,7 @@ internal fun AppNavGraph(
     val optimizeState by optimizeViewModel.state.collectAsStateWithLifecycle()
     val installState by installViewModel.state.collectAsStateWithLifecycle()
     val tvLauncherState by tvLauncherViewModel.state.collectAsStateWithLifecycle()
+    val tvTuningState by tvTuningViewModel.state.collectAsStateWithLifecycle()
     val shizukuStatus by shizukuViewModel.status.collectAsStateWithLifecycle()
     val dpcState by dpcViewModel.state.collectAsStateWithLifecycle()
     val remoteControlState by remoteControlViewModel.state.collectAsStateWithLifecycle()
@@ -366,6 +370,24 @@ internal fun AppNavGraph(
             )
         }
 
+        composable<TvTuningRoute> {
+            LaunchedEffect(Unit) { tvTuningViewModel.onEnter() }
+            TvTuningScreen(
+                state = tvTuningState,
+                onBack = {
+                    if (!navController.popBackStack()) viewModel.goHome()
+                },
+                onRefresh = tvTuningViewModel::refresh,
+                onPreset = tvTuningViewModel::selectPreset,
+                onToggleSetting = tvTuningViewModel::toggleSetting,
+                onToggleBundle = tvTuningViewModel::toggleBundle,
+                onApply = tvTuningViewModel::apply,
+                onUndo = tvTuningViewModel::undo,
+                onDismissMessage = tvTuningViewModel::dismissMessage,
+                onDismissError = tvTuningViewModel::dismissError,
+            )
+        }
+
         composable<TvLauncherRoute> {
             LaunchedEffect(Unit) { tvLauncherViewModel.onEnter() }
             TvLauncherScreen(
@@ -577,6 +599,12 @@ internal fun AppNavGraph(
                 onOpenFiles = { navController.navigate(FilesRoute) { launchSingleTop = true } },
                 onOpenLocalAdb = { navController.navigate(LocalAdbRoute) { launchSingleTop = true } },
                 onOpenTermux = { navController.navigate(TermuxRoute) { launchSingleTop = true } },
+                onOpenTvTuning =
+                    if (dashboardState.device?.isTv == true) {
+                        { navController.navigate(TvTuningRoute) { launchSingleTop = true } }
+                    } else {
+                        null
+                    },
                 onOpenDpc = if (state.activeTarget == AppTarget.REMOTE) viewModel::openDpc else null,
                 targetLabel = dashboardState.device?.displayName,
             )

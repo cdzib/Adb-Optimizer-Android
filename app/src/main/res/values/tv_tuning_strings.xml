@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tv_tuning_title">Puesta a punto de TV</string>
+    <string name="tv_tuning_refresh">Volver a leer los valores</string>
+    <string name="tv_tuning_model">%1$s %2$s</string>
+    <string name="tv_tuning_bundles">Paquetes por modelo</string>
+    <string name="tv_tuning_packages">%1$d paquetes</string>
     <string name="tv_tuning_intro">Ajustes reversibles para dejar la TV más fluida y con menos telemetría. Todo se puede deshacer y nunca se toca el launcher ni el núcleo del sistema.</string>
     <string name="tv_tuning_preset_recommended">Recomendado</string>
     <string name="tv_tuning_preset_performance">Rendimiento</string>

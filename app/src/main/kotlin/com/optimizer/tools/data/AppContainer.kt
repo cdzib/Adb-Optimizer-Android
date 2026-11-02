@@ -35,6 +35,8 @@ import com.optimizer.tools.feature.localadb.data.LibAdbLocalAdbRepository
 import com.optimizer.tools.feature.localadb.data.LocalAdbPairingService
 import com.optimizer.tools.feature.localadb.data.LocalAdbShell
 import com.optimizer.tools.feature.termux.data.TermuxRepositoryImpl
+import com.optimizer.tools.feature.tvtuning.data.TvModelsCatalog
+import com.optimizer.tools.feature.tvtuning.domain.TvModelProfile
 import dev.adboptimizer.core.adb.AdbConnectionFactory
 import dev.adboptimizer.core.adb.AdbDiscovery
 import dev.adboptimizer.core.adb.AdbKeys
@@ -217,6 +219,24 @@ class AppContainer(
             ?: localShell.takeIf { localPrivilegeReady() }
 
     fun hasPrivilegedDevice(): Boolean = privilegedShell() != null
+
+    /** Shell del destino activo: sesión remota o, si no, Shizuku/ADB local. */
+    fun activeShell(): AdbShell? = privilegedShell()
+
+    /**
+     * Listas curadas por modelo para la puesta a punto de TV. Se leen del APK, no de la
+     * red, para que funcionen sin conexion y sin descargas.
+     */
+    val tvModels: List<TvModelProfile> by lazy {
+        val raw =
+            runCatching {
+                context.assets
+                    .open("tv/tv-models.json")
+                    .bufferedReader()
+                    .use { it.readText() }
+            }.getOrDefault("")
+        TvModelsCatalog().parse(raw)
+    }
 
     private fun profileShell(): AdbShell? = privilegedShell()
 

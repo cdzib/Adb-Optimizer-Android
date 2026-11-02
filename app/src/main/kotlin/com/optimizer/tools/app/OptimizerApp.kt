@@ -73,6 +73,7 @@ import com.optimizer.tools.feature.settingsdb.SettingsDbViewModel
 import com.optimizer.tools.feature.shizuku.ShizukuViewModel
 import com.optimizer.tools.feature.termux.presentation.TermuxViewModel
 import com.optimizer.tools.feature.tvlauncher.TvLauncherViewModel
+import com.optimizer.tools.feature.tvtuning.presentation.TvTuningViewModel
 
 @Composable
 fun OptimizerApp(
@@ -84,6 +85,7 @@ fun OptimizerApp(
     optimizeViewModel: OptimizeViewModel,
     installViewModel: InstallViewModel,
     tvLauncherViewModel: TvLauncherViewModel,
+    tvTuningViewModel: TvTuningViewModel,
     shizukuViewModel: ShizukuViewModel,
     dpcViewModel: DpcViewModel,
     remoteControlViewModel: RemoteControlViewModel,
@@ -267,6 +269,7 @@ fun OptimizerApp(
                 optimizeViewModel = optimizeViewModel,
                 installViewModel = installViewModel,
                 tvLauncherViewModel = tvLauncherViewModel,
+                tvTuningViewModel = tvTuningViewModel,
                 shizukuViewModel = shizukuViewModel,
                 dpcViewModel = dpcViewModel,
                 remoteControlViewModel = remoteControlViewModel,
