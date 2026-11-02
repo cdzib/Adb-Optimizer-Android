@@ -14,6 +14,7 @@ import com.optimizer.tools.domain.debloat.DebloatRisk
 import com.optimizer.tools.domain.debloat.DebloatRun
 import com.optimizer.tools.domain.debloat.DebloatSuggestion
 import com.optimizer.tools.domain.profile.ProfileAppState
+import dev.adboptimizer.core.model.AppSafety
 import dev.adboptimizer.core.model.ManagedApp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -381,6 +382,8 @@ class DebloatViewModel(
             .mapNotNull { entry ->
                 val state = states[entry.packageName] ?: return@mapNotNull null
                 if (entry.risk == DebloatRisk.UNSAFE || entry.risk == DebloatRisk.UNKNOWN) return@mapNotNull null
+                // Nunca se ofrecen paquetes cuyo apagado puede impedir el arranque o dejar la TV sin Home.
+                if (AppSafety.isCritical(entry.packageName)) return@mapNotNull null
                 DebloatSuggestion(
                     entry = entry,
                     label = byPackage[entry.packageName]?.displayName ?: entry.packageName,

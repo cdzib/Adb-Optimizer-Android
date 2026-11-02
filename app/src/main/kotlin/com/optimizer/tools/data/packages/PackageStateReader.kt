@@ -43,7 +43,10 @@ class PackageStateReader(
     ) {
         val adb = requireShell()
         if (!AdbCommandRules.isPackageName(packageName)) throw IOException("Nombre de paquete inválido.")
-        if (AppSafety.isCritical(packageName)) throw IOException("$packageName es un paquete crítico y no se modifica.")
+        // Habilitar o reinstalar un paquete crítico es seguro; apagarlo o desinstalarlo no.
+        if (kind != ProfileStepKind.ENABLE && kind != ProfileStepKind.REINSTALL && AppSafety.isCritical(packageName)) {
+            throw IOException("$packageName es un paquete crítico y no se modifica.")
+        }
         val response = adb.exec(commandFor(kind, packageName), COMMAND_TIMEOUT_MS)
         val output = response.output.trim()
         val rejected =

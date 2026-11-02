@@ -66,6 +66,23 @@ class DebloatViewModelTest {
         }
 
     @Test
+    fun `no sugiere paquetes criticos aunque esten en el catalogo`() =
+        runViewModelTest {
+            val critical =
+                DebloatEntry("com.android.tv.settings", "Android", DebloatRisk.RECOMMENDED, "Ajustes de TV.")
+            val viewModel = DebloatViewModel(FakeEnvironment(catalog = catalog + critical))
+
+            viewModel.onEnter()
+            runCurrent()
+
+            assertEquals(2, viewModel.state.value.suggestions.size)
+            assertTrue(
+                viewModel.state.value.suggestions
+                    .none { it.packageName == critical.packageName },
+            )
+        }
+
+    @Test
     fun `descargar el catalogo lo deja listo y avisa`() =
         runViewModelTest {
             val environment = FakeEnvironment(catalog = emptyList(), downloadable = catalog)
@@ -214,6 +231,7 @@ class DebloatViewModelTest {
                 "com.facebook.katana" to ProfileAppState.ENABLED,
                 "com.samsung.android.bixby.agent" to ProfileAppState.DISABLED,
                 "com.example.other" to ProfileAppState.ENABLED,
+                "com.android.tv.settings" to ProfileAppState.ENABLED,
             )
 
         override suspend fun restorable(): List<DebloatRestoreItem> = restorablePackages
