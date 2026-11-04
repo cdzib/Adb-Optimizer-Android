@@ -7,10 +7,10 @@ App Android de AdbOptimizer. Compose + ViewModels con un contrato MVI ligero y D
 - JDK 17 o superior (el CI usa 21)
 - Android SDK 36
 - Gradle Wrapper incluido (`./gradlew`)
-- Catalogo de recetas: la app versiona una copia en `app/catalog`, asi que un clon limpio
-  empaqueta el APK sin dependencias externas. Para desarrollo se puede apuntar al repo de
-  escritorio con `-PsharedDir` o `ADB_OPTIMIZER_SHARED` (tiene prioridad y tambien alimenta
-  los tests de conformidad).
+- Catalogo de recetas: llega por el submodulo `shared/` (repo `adb-optimizer-contract`).
+  Clona con `--recurse-submodules` o inicializa con `git submodule update --init`.
+  Para desarrollo se puede apuntar a una carpeta local con `-PsharedDir` o
+  `ADB_OPTIMIZER_SHARED` (tiene prioridad y tambien alimenta los tests de conformidad).
 
 ## Comandos
 
@@ -38,7 +38,7 @@ app/
 └── src/test/         # Tests JVM
 ```
 scrcpy-server/        # Servidor scrcpy compilado desde fuente (se empaqueta como asset)
-app/catalog/          # Copia versionada del catalogo de recetas e i18n
+shared/               # Submodulo: catalogo de recetas, schema, i18n y fixtures
 fdroid/               # Metadata para publicar en F-Droid
 fastlane/             # Textos de la ficha en F-Droid
 ```

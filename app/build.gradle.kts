@@ -10,19 +10,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-/** Carpeta `shared/` del repo de escritorio, resuelta una sola vez en el build raiz. */
+/** Carpeta `shared/` (submodulo del contrato), resuelta una sola vez en el build raiz. */
 val sharedCatalogDir: File? = rootProject.extra["sharedRootDir"] as File?
 
-val sharedCatalogPresent = sharedCatalogDir != null
-
-/**
- * Copia versionada del catalogo para que un clon limpio (CI o F-Droid) pueda empaquetar el APK.
- * `-PsharedDir` / `ADB_OPTIMIZER_SHARED` siguen teniendo prioridad durante el desarrollo.
- */
-val vendoredCatalogDir = File(projectDir, "catalog")
-val vendoredCatalogPresent = File(vendoredCatalogDir, "recipes/recipes.json").isFile
-
-val catalogPresent = sharedCatalogPresent || vendoredCatalogPresent
+val catalogPresent = sharedCatalogDir != null
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -83,8 +74,8 @@ android {
         aidl = true
     }
 
-    // El catalogo sale de `-PsharedDir` si existe; si no, de la copia versionada `app/catalog`.
-    sourceSets["main"].assets.srcDir(sharedCatalogDir ?: vendoredCatalogDir)
+    // El catalogo sale del submodulo `shared/` (o de `-PsharedDir`).
+    sharedCatalogDir?.let { sourceSets["main"].assets.srcDir(it) }
 
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
@@ -171,7 +162,7 @@ tasks
             doFirst {
                 throw GradleException(
                     "No se encontro el catalogo (recipes/recipes.json). " +
-                        "Restaura app/catalog/recipes o ejecuta con " +
+                        "Inicializa el submodulo (git submodule update --init) o ejecuta con " +
                         "-PsharedDir=/ruta/al/shared.",
                 )
             }

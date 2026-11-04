@@ -17,18 +17,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
       - uses: android-actions/setup-android@v3
+        with:
+          # El default de la accion es 'tools platform-tools' y `tools` ya no
+          # existe en el SDK actual, asi que sdkmanager fallaba al instalarlo.
+          packages: 'platform-tools'
+
+      - name: Instalar plataforma y build-tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
       - uses: gradle/actions/setup-gradle@v4
 
       - run: ./gradlew ktlintCheck detekt --console=plain
       - run: ./gradlew :core:shell:test :core:optimization:test :app:testDebugUnitTest --console=plain
 
-      # El catalogo esta versionado en `app/catalog`, asi que el APK se empaqueta
-      # sin depender de carpetas externas.
+      # El catalogo llega por el submodulo `shared/` (checkout con submodules: recursive).
       - name: Empaquetar APK
         run: ./gradlew :app:assembleDebug --console=plain
 
