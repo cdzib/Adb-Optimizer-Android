@@ -716,34 +716,34 @@ private fun ActiveDeviceCard(
                 style = PillStyle.Tonal,
             )
         }
-        if (onOpenTools != null) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(
-                Modifier.fillMaxWidth().clickable(onClick = onOpenTools).padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                DesignIconBadge(Icons.Filled.Tune, DesignTone.Neutral)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        stringResource(R.string.devices_tools_for_device),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        stringResource(R.string.tools_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+//        if (onOpenTools != null) {
+//            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+//            Row(
+//                Modifier.fillMaxWidth().clickable(onClick = onOpenTools).padding(vertical = 4.dp),
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.spacedBy(12.dp),
+//            ) {
+//                DesignIconBadge(Icons.Filled.Tune, DesignTone.Neutral)
+//                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+//                    Text(
+//                        stringResource(R.string.devices_tools_for_device),
+//                        style = MaterialTheme.typography.bodyMedium,
+//                    )
+//                    Text(
+//                        stringResource(R.string.tools_description),
+//                        style = MaterialTheme.typography.bodySmall,
+//                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis,
+//                    )
+//                }
+//                Icon(
+//                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+//                    contentDescription = null,
+//                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+//                )
+//            }
+//        }
     }
 }
 
