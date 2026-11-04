@@ -21,10 +21,6 @@ class ConformanceTest {
             ?: generateSequence(File(".").absoluteFile) { it.parentFile }
                 .map { File(it, "shared/conformance/cases") }
                 .firstOrNull { it.isDirectory }
-            ?: listOf(
-                File("../../../AdbOptimizer-Desktop/shared/conformance/cases"),
-                File("../../../../AdbOptimizer-Desktop/shared/conformance/cases"),
-            ).firstOrNull { it.isDirectory }
 
     @Test
     fun `hay casos de conformidad compartidos`() {

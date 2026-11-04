@@ -10,8 +10,9 @@ parte del build de Android.
 - Sin SDKs propietarios, anuncios, analitica ni rastreadores.
 - Sin binarios precompilados: `scrcpy-server` se compila desde fuente en el
   modulo `:scrcpy-server`.
-- Catalogo de recetas y traducciones versionados en `app/catalog`, de modo que
-  un clon limpio empaqueta el APK sin carpetas externas.
+- Catalogo de recetas y traducciones en el repo `adb-optimizer-contract`, montado como
+  submodulo `shared/`; el metadata declara `submodules: true` y usa URL https para que
+  el buildserver pueda clonarlo.
 - `fastlane/metadata/android/` con titulo, descripcion corta y descripcion
   larga en `en-US` y `es-MX`.
 

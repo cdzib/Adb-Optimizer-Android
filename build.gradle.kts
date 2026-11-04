@@ -10,18 +10,16 @@ plugins {
 }
 
 /**
- * El catalogo y los fixtures de conformidad viven en el repo de escritorio (`shared/`).
- * La app versiona una copia del catalogo en `app/catalog` para poder empaquetar el APK
- * sin carpetas externas; `-PsharedDir` sigue teniendo prioridad para desarrollo y tests.
- * Se usa la primera carpeta que tenga `recipes/recipes.json`: `-PsharedDir=...`,
- * `ADB_OPTIMIZER_SHARED`, `../shared` y `../AdbOptimizer-Desktop/shared`.
+ * El catalogo y los fixtures de conformidad llegan por el submodulo `shared/`
+ * (repo adb-optimizer-contract). No hay copia vendorizada: `-PsharedDir` sigue
+ * teniendo prioridad para desarrollo. Se usa la primera carpeta con
+ * `recipes/recipes.json`: `-PsharedDir=...`, `ADB_OPTIMIZER_SHARED` y `shared`.
  */
 val sharedRootDir: File? =
     listOfNotNull(
         providers.gradleProperty("sharedDir").orNull,
         providers.environmentVariable("ADB_OPTIMIZER_SHARED").orNull,
-        file("../shared").path,
-        file("../AdbOptimizer-Desktop/shared").path,
+        file("shared").path,
     ).map(::File)
         .firstOrNull { File(it, "recipes/recipes.json").isFile }
 

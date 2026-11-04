@@ -58,8 +58,6 @@ class CatalogAndEngineTest {
             ?: generateSequence(File(".").absoluteFile) { it.parentFile }
                 .map { File(it, "shared") }
                 .firstOrNull(::hasCatalog)
-            ?: listOf(File("../AdbOptimizer-Desktop/shared"), File("../../AdbOptimizer-Desktop/shared"))
-                .firstOrNull(::hasCatalog)
 
     private val bundle by lazy {
         assumeTrue(

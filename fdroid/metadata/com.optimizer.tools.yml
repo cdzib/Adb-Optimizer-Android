@@ -11,14 +11,18 @@ Builds:
   - versionName: 0.1.0
     versionCode: 1
     commit: REEMPLAZAR_CON_EL_HASH_COMPLETO_DEL_TAG_v0.1.0
+    # El catalogo llega por el submodulo shared/ (adb-optimizer-contract).
+    submodules: true
     gradle:
       - yes
     prebuild: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
 MaintainerNotes: |-
-  El catalogo de recetas y las traducciones se versionan en `app/catalog`, y el
-  servidor de scrcpy se compila desde `scrcpy-server/` (fuente Apache-2.0), asi
-  que el build no necesita archivos ni repositorios externos.
+  El catalogo de recetas y las traducciones se versionan en el repo
+  adb-optimizer-contract y llegan por el submodulo `shared/` (URL https para que
+  el buildserver pueda clonarlo). El servidor de scrcpy se compila desde
+  `scrcpy-server/` (fuente Apache-2.0), asi que el build no necesita binarios
+  precompilados.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[\d.]+$
